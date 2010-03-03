@@ -1,0 +1,194 @@
+package org.ontoware.text2onto.algorithm.relation;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.ontoware.text2onto.change.Change;
+import org.ontoware.text2onto.corpus.AbstractDocument;
+import org.ontoware.text2onto.linguistic.AnalyserException;
+import org.ontoware.text2onto.linguistic.LinguisticAnalyser; 
+import org.ontoware.text2onto.pom.POMRelation;
+import org.ontoware.text2onto.evidence.DocumentReference;
+import org.ontoware.text2onto.evidence.PatternStore;
+import org.ontoware.text2onto.evidence.EvidenceManager;
+import org.ontoware.text2onto.algorithm.AbstractAlgorithm;
+
+/**
+ * @author Simon Sparn (sparn@ontoprise.de)
+ * @author Johanna Voelker (jvo@aifb.uni-karlsruhe.de)
+ */
+public abstract class AbstractPatternRelationExtraction extends AbstractAlgorithm implements AbstractRelationExtraction {
+
+	protected PatternStore m_patternStore;
+   
+ 
+	protected void setEvidenceManager( EvidenceManager refManager ) {
+		super.setEvidenceManager( refManager );
+		m_patternStore = (PatternStore)m_evidenceManager.getLocalStore( this, PatternStore.class.getName() );
+	}
+
+	public List execute() throws Exception {
+		ArrayList storeChanges = new ArrayList();
+		List corpusChanges = m_corpus.getChangesFor( this );
+		Iterator iterChanges = corpusChanges.iterator();  
+		while ( iterChanges.hasNext() )
+		{
+			Change change = (Change)iterChanges.next();
+			int iChange = change.getType(); 
+			AbstractDocument doc = (AbstractDocument)change.getObject();
+			
+			List relationPointers = getRelationPointers( doc );  
+			for ( int i = 0; i < relationPointers.size(); i++ )
+			{
+				DocumentReference dpRelation = (DocumentReference)relationPointers.get( i ); 
+				List alRelations = getRelations( dpRelation );
+				for ( int j = 0; j < alRelations.size(); j++ )
+				{
+					POMRelation relation = (POMRelation)alRelations.get( j );
+					if( iChange == Change.Type.ADD ){ 
+						storeChanges.add( new Change( Change.Type.ADD, this, relation, dpRelation, change ) ); 
+					}
+					else if( iChange == Change.Type.REMOVE ){
+						storeChanges.add( new Change( Change.Type.REMOVE, this, relation, dpRelation, change ) );
+					}
+				} 
+			}  
+		}
+		m_corpus.resetChangesFor( this ); 
+		m_patternStore.addChangeObserver( this );
+		m_patternStore.applyChanges( storeChanges );  
+		return createPOMChanges(); 
+	}
+
+	protected List createPOMChanges() throws Exception { 
+		ArrayList pomChanges = new ArrayList();
+		List storeChanges = m_patternStore.getChangesFor( this );  
+		Iterator iterChanges = storeChanges.iterator();
+		while ( iterChanges.hasNext() )
+		{
+			Change change = (Change)iterChanges.next(); 
+			int iChange = change.getType();
+			if( iChange == Change.Type.ADD ){
+				addChanges( createAddPOMChanges( change ), pomChanges );
+			} 
+			else if( iChange == Change.Type.REMOVE ){
+				addChanges( createRemovePOMChanges( change ), pomChanges );
+			} 
+		}
+		m_patternStore.resetChangesFor( this );
+		return pomChanges;
+	}
+	 
+	private ArrayList createAddPOMChanges( Change change ){ 
+		ArrayList pomChanges = new ArrayList();
+		POMRelation pomRelation = (POMRelation)change.getObject(); 
+		ArrayList alDomainRelations = getDomainRelations( pomRelation );  
+		int iAllFreq = countDomainRelationPointers( pomRelation );
+		for( int i=0; i < alDomainRelations.size(); i++ )
+		{
+			POMRelation domainRelation = (POMRelation)alDomainRelations.get( i );
+			int iFreq = m_patternStore.getDocumentReferences( domainRelation ).size(); 
+  
+			if ( !m_pomInterface.contains( domainRelation ) )
+			{
+				Double dProb = getProbability( iFreq, iAllFreq );
+				domainRelation.setProbability( dProb.doubleValue() );
+				pomChanges.add( new Change( Change.Type.ADD, this, domainRelation, dProb, change ) );
+			} 
+			else {
+				Double dProb = getProbability( iFreq, iAllFreq );
+				domainRelation.setProbability( dProb.doubleValue() );
+				pomChanges.add( new Change( Change.Type.MODIFY, this, domainRelation, dProb, change ) );
+			} 
+		} 
+		return pomChanges;
+	}
+
+	private ArrayList createRemovePOMChanges( Change change ) {
+		ArrayList pomChanges = new ArrayList();
+		AbstractDocument doc = (AbstractDocument)change.getObject();
+		POMRelation pomRelation = (POMRelation)change.getValue();
+		ArrayList alDomainRelations = getDomainRelations( pomRelation );
+		if ( !( alDomainRelations.contains( pomRelation ) ) )
+		{
+			alDomainRelations.add( pomRelation );
+		}
+		int iAllFreq = countDomainRelationPointers( pomRelation ); 
+		for( int i=0; i < alDomainRelations.size(); i++ )
+		{
+			POMRelation domainRelation = (POMRelation)alDomainRelations.get( i );
+			int iFreq = m_patternStore.getDocumentReferences( domainRelation ).size();
+			Change pomChange = null;
+			if ( iFreq == 0 )
+			{
+				Double dProb = getProbability( iFreq, iAllFreq );
+				domainRelation.setProbability( dProb.doubleValue() );
+				pomChange = new Change( Change.Type.REMOVE, this, domainRelation, dProb, change );
+			} 
+			else {
+				Double dProb = getProbability( iFreq, iAllFreq );
+				domainRelation.setProbability( dProb.doubleValue() );
+				pomChange = new Change( Change.Type.MODIFY, this, domainRelation, dProb, change );
+			}
+			pomChanges.add( pomChange );
+		}
+		return pomChanges;
+	}
+	
+	protected int countDomainRelationPointers( POMRelation relation ) {
+		int iPointers = 0; 
+		List domainRelations = getDomainRelations( relation );
+		Iterator iter = domainRelations.iterator();
+		while( iter.hasNext() )
+		{
+			POMRelation domainRelation = (POMRelation)iter.next();
+			iPointers += m_patternStore.getDocumentReferences( domainRelation ).size();
+		}
+		return iPointers;
+	}
+ 
+	private void addChanges( ArrayList alSource, ArrayList alTarget ) {
+		for ( int i = 0; i < alSource.size(); i++ )
+		{
+			Change change = (Change)alSource.get( i );
+			if ( !alTarget.contains( change ) )
+			{
+				alTarget.add( (Change)alSource.get( i ) );
+			}
+		}
+	}
+ 
+	private List getStemmedHeads( List alPointers ) throws AnalyserException {
+		ArrayList alStemmedHeads = new ArrayList();
+		for ( int i = 0; i < alPointers.size(); i++ )
+		{
+			DocumentReference pointer = (DocumentReference)alPointers.get( i );
+			List headPointers = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.HEAD );
+			if( headPointers.size() > 0 ){
+				pointer = (DocumentReference)headPointers.get(0);
+			} 
+			String sStem = m_analyser.getStemmedText( pointer );
+			alStemmedHeads.add( sStem );
+		}
+		return alStemmedHeads;
+	}
+
+	protected List getDomainStrings( DocumentReference dpRelation ) throws AnalyserException {
+		List alDomainPointers = m_analyser.getDocumentReferences( dpRelation, LinguisticAnalyser.DOMAIN );
+		return getStemmedHeads( alDomainPointers );
+	}
+
+	protected List getRangeStrings( DocumentReference dpRelation ) throws AnalyserException {
+		List alRangePointers = m_analyser.getDocumentReferences( dpRelation, LinguisticAnalyser.RANGE );
+		return getStemmedHeads( alRangePointers );
+	}	
+	
+	protected abstract Double getProbability( int iFreq, int iAllFreq );
+	
+	protected abstract List getRelationPointers( AbstractDocument doc );
+
+	protected abstract List getRelations( DocumentReference dpRelation ) throws AnalyserException;
+ 
+	protected abstract ArrayList getDomainRelations( POMRelation relation );
+}

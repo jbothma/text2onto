@@ -1,0 +1,8 @@
+MultiPhase:	TestTheGrammars
+Phases:
+linguistic_1
+linguistic_2
+linguistic_3
+ontological_entities
+ontological_relations
+ontological_axioms

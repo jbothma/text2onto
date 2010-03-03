@@ -1,0 +1,320 @@
+package org.ontoware.text2onto.algorithm.relation.general;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+ 
+import org.ontoware.text2onto.change.Change; 
+import org.ontoware.text2onto.corpus.AbstractDocument;
+import org.ontoware.text2onto.pom.POMObject;
+import org.ontoware.text2onto.pom.POMEntity;
+import org.ontoware.text2onto.pom.POMInstance;
+import org.ontoware.text2onto.pom.POMConcept;
+import org.ontoware.text2onto.pom.POMRelation;
+import org.ontoware.text2onto.pom.POMRelationInstance;
+import org.ontoware.text2onto.evidence.DocumentReference;
+import org.ontoware.text2onto.evidence.EvidenceManager;
+import org.ontoware.text2onto.evidence.SubcatFrameInstance;
+import org.ontoware.text2onto.evidence.SubcatFrame;
+import org.ontoware.text2onto.evidence.SubcatStore;
+import org.ontoware.text2onto.linguistic.LinguisticAnalyser;
+import org.ontoware.text2onto.linguistic.AnalyserException;
+import org.ontoware.text2onto.algorithm.AbstractAlgorithm;
+ 
+ 
+public class SubcatRelationInstanceExtraction extends AbstractAlgorithm implements AbstractGeneralRelationExtraction { 
+ 
+	private SubcatStore m_subcatStore;
+	
+	protected void setEvidenceManager(EvidenceManager refManager) {
+		super.setEvidenceManager(refManager);
+		m_subcatStore = (SubcatStore)m_evidenceManager.getLocalStore(this, SubcatStore.class.getName());
+	}
+	
+	public List execute() throws Exception {
+		ArrayList subcatChanges = new ArrayList(); 
+		List corpusChanges = m_corpus.getChangesFor( this );  
+		Iterator chIter = corpusChanges.iterator();
+		while( chIter.hasNext() ) 
+		{
+			Change change = (Change)chIter.next(); 
+			int iChange = change.getType();
+			AbstractDocument doc = (AbstractDocument)change.getObject(); 
+			System.out.println( "SubcatRelationExtraction: "+ doc );
+ 			DocumentReference pointer;
+ 			SubcatFrameInstance instance = null;
+ 			
+ 			/*
+ 			 * Transitive Verb Phrases  
+ 			 */
+ 			List DocumentReferences = m_analyser.getDocumentReferences( doc, LinguisticAnalyser.VERB_PHRASE_TRANSITIVE );
+ 			Iterator pointers = DocumentReferences.iterator();
+ 			while( pointers.hasNext() )
+ 			{
+ 				pointer = (DocumentReference) pointers.next();
+ 				System.out.println( "Matched: "+ m_analyser.getText( pointer ) ); 
+		 
+				// sVerb = "love";
+				// sSubject = "man";
+				// sObject = "woman";
+				
+				List verbs = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.VERB );
+				List subjects = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.SUBJECT );
+				List objects = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.OBJECT );
+			 	
+			 	if( verbs.size() == 0 || subjects.size() == 0 || objects.size() == 0 ){
+			 		continue;
+			 	}		
+			 		 
+				String sVerb = m_analyser.getStemmedText( (DocumentReference)verbs.get(0) );
+				String sSubject = getStemmedHead( (DocumentReference)subjects.get(0) );
+				String sObject = getStemmedHead( (DocumentReference)objects.get(0) );	
+				
+				System.out.println( "Verb="+ sVerb +", Subject="+ sSubject +", Object="+ sObject );	
+				
+				// TODO
+				if( sVerb.equals( "be" ) ){
+					continue;
+				}					
+				
+				instance = new SubcatFrameInstance( SubcatFrame.TRANSITIVE, sVerb );
+				instance.setArgument( SubcatFrame.SUBJECT, sSubject );
+				instance.setArgument( SubcatFrame.OBJECT, sObject );
+				if( iChange == Change.Type.ADD )
+				{ 
+					subcatChanges.add( new Change( Change.Type.ADD, this, instance, pointer, change ) ); 
+				} 
+				else if( iChange == Change.Type.REMOVE )
+				{ 
+					subcatChanges.add( new Change( Change.Type.REMOVE, this, instance, pointer, change ) ); 
+				} 
+ 			}
+ 			/*
+ 			 * Intransitive+PP Verb Phrases 
+			 */
+			DocumentReferences = m_analyser.getDocumentReferences( doc, LinguisticAnalyser.VERB_PHRASE_INTRANSITIVE_PP );
+			pointers = DocumentReferences.iterator();
+			while( pointers.hasNext() ) 
+			{
+				pointer = (DocumentReference) pointers.next();
+				System.out.println( "Matched: "+ pointer ); 
+			 
+				// String sVerb = "go";
+				// String sSubject = "man";
+				// String sPObject = "bed";
+				// String sPrep = "to";
+				
+				List verbs = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.VERB );
+				List subjects = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.SUBJECT );
+				List pobjects = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.POBJECT );
+				List preps = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.PREPOSITION );
+			 		
+			 	if( verbs.size() == 0 || subjects.size() == 0 || pobjects.size() == 0 || preps.size() == 0 ){
+			 		continue;
+			 	}		
+			 				 
+				String sVerb = m_analyser.getStemmedText( (DocumentReference)verbs.get(0) );
+				String sSubject = getStemmedHead( (DocumentReference)subjects.get(0) );
+				String sPObject = getStemmedHead( (DocumentReference)pobjects.get(0) );	
+				String sPrep = m_analyser.getText( (DocumentReference)preps.get(0) );
+				
+				System.out.println( "Verb="+ sVerb +", Subject="+ sSubject +", PObject="+ sPObject +", Prep="+ sPrep );
+				
+				// TODO
+				if( sVerb.equals( "be" ) ){
+					continue;
+				}
+				 							
+				instance = new SubcatFrameInstance( SubcatFrame.INTRANSITIVE_PP, sVerb );
+				instance.setArgument( SubcatFrame.SUBJECT, sSubject );
+				instance.setArgument( SubcatFrame.POBJECT, sPObject );
+				instance.setArgument( SubcatFrame.PREPOSITION, sPrep );
+				if( iChange == Change.Type.ADD )
+				{ 
+					subcatChanges.add( new Change( Change.Type.ADD, this, instance, pointer, change ) ); 
+				} 
+				else if( iChange == Change.Type.REMOVE )
+				{ 
+					subcatChanges.add( new Change( Change.Type.REMOVE, this, instance, pointer, change ) ); 
+				} 
+			}
+			/*
+			 * Transitive+PP Verb Phrases
+			 */
+			DocumentReferences = m_analyser.getDocumentReferences( doc, LinguisticAnalyser.VERB_PHRASE_TRANSITIVE_PP );
+			pointers = DocumentReferences.iterator();
+			while( pointers.hasNext() )
+			{
+				pointer = (DocumentReference) pointers.next();
+				System.out.println( "Matched: "+ pointer ); 
+				 
+				// String sVerb ="surprise";
+				// String sSubject = "man";
+				// String sObject = "woman";
+				// String sPObject = "present";
+				// String sPrep = "with";
+				
+				List verbs = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.VERB );
+				List subjects = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.SUBJECT );
+				List objects = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.OBJECT );
+				List pobjects = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.POBJECT );
+				List preps = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.PREPOSITION );
+			 		
+			 	if( verbs.size() == 0 || subjects.size() == 0 || objects.size() == 0 || pobjects.size() == 0 || preps.size() == 0 ){
+			 		continue;
+			 	}		
+			 				 
+				String sVerb = m_analyser.getStemmedText( (DocumentReference)verbs.get(0) );
+				String sSubject = getStemmedHead( (DocumentReference)subjects.get(0) );
+				String sObject = getStemmedHead( (DocumentReference)objects.get(0) );
+				String sPObject = getStemmedHead( (DocumentReference)pobjects.get(0) );	
+				String sPrep = m_analyser.getText( (DocumentReference)preps.get(0) );
+				
+				System.out.println( "Verb="+ sVerb +", Subject="+ sSubject +", Object="+ sObject +", PObject="+ sPObject +", Prep="+ sPrep );
+				
+				// TODO
+				if( sVerb.equals( "be" ) ){
+					continue;
+				}				
+				
+				instance = new SubcatFrameInstance( SubcatFrame.TRANSITIVE_PP, sVerb );
+				instance.setArgument( SubcatFrame.SUBJECT, sSubject );
+				instance.setArgument( SubcatFrame.OBJECT, sObject );
+				instance.setArgument( SubcatFrame.POBJECT, sPObject );
+				instance.setArgument( SubcatFrame.PREPOSITION, sPrep );
+				if( iChange == Change.Type.ADD )
+				{ 
+					subcatChanges.add( new Change( Change.Type.ADD, this, instance, pointer, change ) ); 
+				} 
+				else if( iChange == Change.Type.REMOVE )
+				{ 
+					subcatChanges.add( new Change( Change.Type.REMOVE, this, instance, pointer, change ) ); 
+				} 
+			}
+		} 
+		m_corpus.resetChangesFor( this );  
+		m_subcatStore.addChangeObserver( this );
+		m_subcatStore.applyChanges( subcatChanges );
+		System.out.println( "SubcatStore: "+ m_subcatStore );
+		return createPOMChanges();
+	}
+ 
+	private List createPOMChanges() {
+		ArrayList alChanges = new ArrayList();
+		List changes = m_subcatStore.getChangesFor( this ); 
+		Iterator iter = changes.iterator();
+		while( iter.hasNext() )
+		{
+			Change change = (Change)iter.next(); 
+			SubcatFrameInstance instance = (SubcatFrameInstance)change.getObject(); 
+			String sVerb = instance.getVerb();
+			String sRelation;
+			String sDomain;
+			String sRange;
+			Change pomChange;
+			if( instance.getType() == SubcatFrame.TRANSITIVE )
+			{
+				sRelation = sVerb;				 
+				sDomain = instance.getValue( SubcatFrame.SUBJECT ); 
+				sRange = instance.getValue( SubcatFrame.OBJECT );
+				pomChange = createPOMChange( change, sRelation, sDomain, sRange );
+				if( pomChange != null ){
+					alChanges.add( pomChange );
+				}
+			}
+			if( instance.getType() == SubcatFrame.INTRANSITIVE_PP )
+			{
+				sRelation = sVerb +"s_"+ instance.getValue( SubcatFrame.PREPOSITION );
+				sDomain = instance.getValue( SubcatFrame.SUBJECT ); 
+				sRange = instance.getValue( SubcatFrame.POBJECT );
+				pomChange = createPOMChange( change, sRelation, sDomain, sRange );
+				if( pomChange != null ){
+					alChanges.add( pomChange );
+				}
+			}
+			if( instance.getType() == SubcatFrame.TRANSITIVE_PP )
+			{
+				sRelation = sVerb +"s_"+ instance.getValue( SubcatFrame.PREPOSITION ); 
+				sDomain = instance.getValue( SubcatFrame.SUBJECT ); 
+				sRange = instance.getValue( SubcatFrame.OBJECT );
+				pomChange = createPOMChange( change, sRelation, sDomain, sRange );
+				if( pomChange != null ){
+					alChanges.add( pomChange );
+				}
+					
+				sRelation = sVerb +"s_"+ instance.getValue( SubcatFrame.PREPOSITION ); 
+				sDomain = instance.getValue( SubcatFrame.SUBJECT ); 
+				sRange = instance.getValue( SubcatFrame.POBJECT );
+				pomChange = createPOMChange( change, sRelation, sDomain, sRange );
+				if( pomChange != null ){
+					alChanges.add( pomChange );
+				}
+				
+				sRelation = sVerb +"ed_"+ instance.getValue( SubcatFrame.PREPOSITION ); 
+				sDomain = instance.getValue( SubcatFrame.OBJECT ); 
+				sRange = instance.getValue( SubcatFrame.POBJECT );
+				pomChange = createPOMChange( change, sRelation, sDomain, sRange );
+				if( pomChange != null ){
+					alChanges.add( pomChange );
+				}
+			}				
+		}
+		// TODO: update probabilities
+		System.out.println( "POMChanges: "+ alChanges );
+		return alChanges;
+	}
+	
+	private Change createPOMChange( Change change, String sRelation, String sDomain, String sRange ){
+		POMEntity domain = m_pomInterface.getEntity( sDomain );
+		POMEntity range = m_pomInterface.getEntity( sRange );
+		System.out.print( "domain: "+ domain );
+		System.out.println( "range: "+ range );
+		
+		int iChange = change.getType();
+		// TODO
+		if( domain == null || range == null ){
+				return null; 
+		}	
+		POMObject rel = null;
+		if( domain instanceof POMConcept && range instanceof POMConcept )
+		{			
+			rel = new POMRelation();
+			((POMRelation)rel).setLabel( sRelation );
+			((POMRelation)rel).setProbability( 1.0 );
+			((POMRelation)rel).setDomain( (POMConcept)domain );
+			((POMRelation)rel).setRange( (POMConcept)range );
+		} 
+		else if( domain instanceof POMInstance && range instanceof POMInstance ){  
+			rel = new POMRelationInstance();
+			((POMRelationInstance)rel).setLabel( sRelation );
+			((POMRelationInstance)rel).setProbability( 1.0 );
+			((POMRelationInstance)rel).setDomain( (POMInstance)domain );
+			((POMRelationInstance)rel).setRange( (POMInstance)range );
+		}
+		if( iChange == Change.Type.ADD )
+		{
+			if( m_pomInterface.contains( rel ) ){
+				return new Change( Change.Type.MODIFY, this, rel, change ); 
+			} 
+			else {
+				return new Change( Change.Type.ADD, this, rel, change );
+			}
+		}
+		else if( iChange == Change.Type.REMOVE )
+		{
+			if( m_pomInterface.contains( rel ) ){
+				return new Change( Change.Type.REMOVE, this, rel, change );
+			}	
+		}
+		return null;
+	}
+  
+	private String getStemmedHead( DocumentReference pointer ) throws AnalyserException { 
+		List headPointers = m_analyser.getDocumentReferences( pointer, LinguisticAnalyser.HEAD );
+		if( headPointers.size() > 0 ){
+			pointer = (DocumentReference)headPointers.get(0);
+		} 
+		return m_analyser.getStemmedText( pointer ); 
+	}
+}

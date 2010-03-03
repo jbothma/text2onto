@@ -1,0 +1,60 @@
+//
+// $Id: es-np-parts.jape,v 1.1 2006-03-24 12:08:28 jvo Exp $
+//
+// Multilingual Noun Phrase Extractor (MuNPEx) -- Spanish
+//
+// (c) 2006 Rene Witte (http://rene-witte.net)
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+
+
+Phase: ES_NP_Parts
+Input: Token Number
+Options: control = brill
+
+Rule: det
+Priority: 50
+(
+	{Token.category == "ART"}
+):det
+-->
+	:det.tempNP = {kind = "DET"}
+
+
+Rule: mod
+Priority: 50
+(
+	{Token.category == "ADJ"}|
+	{Token.category == "CARD"}|
+	{Number}
+):mod
+-->
+	:mod.tempNP = {kind = "MOD"}
+
+
+Rule: mod2
+Priority: 50
+(
+	{Token.category == "ADJ"}
+):mod
+-->
+	:mod.tempNP = {kind = "MOD2"}
+
+
+Rule: head
+Priority: 50
+(
+	{Token.category == "DM"}|
+	{Token.category == "INT"}|
+	{Token.category == "NC"}|
+	({Token.category == "NP"}({Token.category == "NP"})*)|
+	{Token.category == "ORD"}|   // check
+	{Token.category == "PPX"}|
+	{Token.category == "PPO"}
+):head
+-->
+	:head.tempNP = {kind = "HEAD"}

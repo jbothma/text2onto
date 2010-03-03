@@ -1,0 +1,4 @@
+package org.ontoware.text2onto.algorithm.taxonomic.subrelationOf;
+ 
+public interface AbstractRelationClassification { 
+}

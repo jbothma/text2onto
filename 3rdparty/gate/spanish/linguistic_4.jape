@@ -1,0 +1,131 @@
+Phase: Linguistic4
+//Input: NounPhrase ProperNounPhrase PrepositionalPhrase SubordinatePhrase SpaceToken Token 
+Options: control = appelt
+
+Rule: TransitiveVerbPhrase2
+(
+	(
+		{NounPhrase}|
+		{ProperNounPhrase}|
+		{NounPhrase2}|
+		{ProperNounPhrase2}
+	):subject
+	{SpaceToken.kind == space}
+	(
+		(PREVERB):preverb
+		{SpaceToken.kind == space}
+	)?
+	(
+		(VERB):verb			
+	)
+	(
+		{SpaceToken.kind == space}
+		(VERB2):verb2			
+	)* 
+	(
+		{SpaceToken.kind == space}
+		(ADVERB)			
+	)* 
+	{SpaceToken.kind == space}
+	(
+		{NounPhrase}|
+		{ProperNounPhrase}|
+		{NounPhrase2}|
+		{ProperNounPhrase2}
+	):object 
+):transitive -->
+:preverb.Verb = { rule = "TransitiveVerbPhrase" },
+:verb.Verb = { rule = "TransitiveVerbPhrase" },
+:verb2.Verb =  { rule = "TransitiveVerbPhrase" },
+:transitive.TransitiveVerbPhrase = { rule = "TransitiveVerbPhrase" },
+:subject.Subject = { rule = "TransitiveVerbPhrase" },
+:object.Object = { rule = "TransitiveVerbPhrase" }
+
+Rule: IntransitivePPVerbPhrase
+(
+	(
+		{NounPhrase}|
+		{ProperNounPhrase}|
+		{NounPhrase2}|
+		{ProperNounPhrase2}
+	):subject
+	{SpaceToken.kind == space}
+	(
+		(PREVERB):preverb
+		{SpaceToken.kind == space}
+	)?
+	(
+		(VERB):verb			
+	)
+	(
+		{SpaceToken.kind == space}
+		(VERB2):verb2			
+	)* 
+	(
+		{SpaceToken.kind == space}
+		(ADVERB)			
+	)* 
+	{SpaceToken.kind == space}
+	(
+		(PREPOSITION):prep
+		{SpaceToken.kind == space}
+		(
+			{NounPhrase}|
+			{ProperNounPhrase}|
+			{NounPhrase2}|
+			{ProperNounPhrase2}
+		):pobject
+	)
+):intransitivePP -->
+:preverb.Verb = { rule = "IntransitivePPVerbPhrase" },
+:verb.Verb = { rule = "IntransitivePPVerbPhrase" },
+:verb2.Verb =  { rule = "IntransitivePPVerbPhrase" },
+:intransitivePP.IntransitivePPVerbPhrase = { rule = "IntransitivePPVerbPhrase" },
+:subject.Subject = { rule = "IntransitivePPVerbPhrase" },
+:pobject.PObject = { rule = "IntransitivePPVerbPhrase" },
+:prep.Preposition = { rule = "IntransitivePPVerbPhrase" }
+
+Rule: TransitivePPVerbPhrase
+(
+	(
+		{NounPhrase}|
+		{ProperNounPhrase}|
+		{NounPhrase2}|
+		{ProperNounPhrase2}
+	):subject
+	{SpaceToken.kind == space}
+	(
+		(PREVERB):preverb
+		{SpaceToken.kind == space}
+	)?
+	(
+		(VERB):verb			
+	)
+	(
+		{SpaceToken.kind == space}
+		(VERB2):verb2			
+	)* 
+	(
+		{NounPhrase}|
+		{ProperNounPhrase}
+	):object
+	{SpaceToken.kind == space}
+	(
+		(PREPOSITION):prep
+		{SpaceToken.kind == space}
+		(
+			{NounPhrase}|
+			{ProperNounPhrase}|
+			{NounPhrase2}|
+			{ProperNounPhrase2}
+		):pobject
+	)
+):transitivePP -->
+:transitivePP.TransitivePPVerbPhrase = { rule = "TransitivePPVerbPhrase" },
+:preverb.Verb = { rule = "TransitivePPVerbPhrase" },
+:verb.Verb = { rule = "TransitivePPVerbPhrase" },
+:verb2.Verb =  { rule = "TransitivePPVerbPhrase" },
+:subject.Subject = { rule = "TransitivePPVerbPhrase" },
+:object.Object = { rule = "TransitiveVerbPhrase" },
+:prep.Preposition = { rule = "TransitivePPVerbPhrase" },
+:pobject.PObject = { rule = "TransitivePPVerbPhrase" }

@@ -1,0 +1,50 @@
+<properties>
+<algorithms>
+		<algorithm  id="7">
+		<name>ExampleConceptExtraction</name>
+		<class>org.ontoware.text2onto.algorithm.entity.concept.ExampleConceptExtraction</class>
+	</algorithm>
+		<algorithm  id="6">
+		<name>ExampleInstanceExtraction</name>
+		<class>org.ontoware.text2onto.algorithm.entity.instance.ExampleInstanceExtraction</class>
+	</algorithm>
+		<algorithm  id="5">
+		<name>ExampleContextExtraction</name>
+		<class>org.ontoware.text2onto.algorithm.context.ExampleContextExtraction</class>
+	</algorithm>
+	<algorithm  id="1">
+		<name>PatternConceptClassification</name>
+		<class>org.ontoware.text2onto.algorithm.relation.taxonomic.subclassOf.PatternConceptClassification</class>
+	</algorithm>
+		<algorithm  id="3">
+		<name>PatternInstanceClassification</name>
+		<class>org.ontoware.text2onto.algorithm.relation.taxonomic.instanceOf.PatternInstanceClassification</class>
+	</algorithm>
+	<algorithm  id="2">
+		<name>VerticalRelationsConceptClassification</name>
+		<class>org.ontoware.text2onto.algorithm.relation.taxonomic.subclassOf.VerticalRelationsConceptClassification</class>
+	</algorithm>
+		<algorithm id="0">
+		<name>WordnetConceptClassificationAlgorithm</name>
+		<class>org.ontoware.text2onto.wordnet.algorithm.WordnetConceptClassificationAlgorithm</class>
+	</algorithm>
+	<algorithm  id="4">
+		<name>WordnetPartOfRelationAlgorithm</name>
+		<class>org.ontoware.text2onto.wordnet.algorithm.WordnetPartOfRelationAlgorithm</class>
+	</algorithm>
+</algorithms>
+<relation_types>
+	<relation>
+		<name>SubclassOfRelation</name>
+		<class>org.ontoware.text2onto.pom.POMSubclassOfRelation</class>
+	</relation>
+	<relation>
+		<name>InstanceOfRelation</name>
+		<class>org.ontoware.text2onto.pom.POMInstanceOfRelation</class>
+	</relation>
+	<relation>
+		<name>PartOfRelation</name>
+		<class>org.ontoware.text2onto.pom.POMConceptualRelation</class>
+	</relation>
+</relation_types>
+</properties>

@@ -1,0 +1,83 @@
+//
+// $Id: fr-np-parts.jape,v 1.1 2006-03-24 12:08:28 jvo Exp $
+//
+// Multilingual Noun Phrase Extractor (MuNPEx) -- French
+//
+// (c) 2005--2006 Michelle Khalife, Rene Witte (http://rene-witte.net)
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+
+
+Phase: FR_NP_Parts
+Input: Token Number
+Options: control = brill
+
+Rule: det
+Priority: 50
+(
+	{Token.category == "DET"}|         // check
+	{Token.category == "DET:def"}|
+	{Token.category == "DET:indef"}|
+	{Token.category == "DET:ART"}|
+	{Token.category == "DET:PART"}|    // in tagset doc, but not encountered yet
+	{Token.category == "DET:POS"}|
+//	{Token.category == "PRE:det"}|     // check
+	{Token.category == "PRP:det"}|
+	{Token.category == "PRO:POS"}|
+	{Token.category == "PRO:IND"}|
+	{Token.category == "PRO:DEM"}
+):det
+-->
+	:det.tempNP = {kind = "DET"}
+
+
+Rule: mod
+Priority: 50
+(
+	{Token.category == "ABR"}|
+	{Token.category == "ADJ"}|
+	({Token.category == "ADJ"}({Token.category == "KON"}{Token.category == "ADJ"})*)|
+	{Token.category == "NUM"}|
+	{Number}
+):mod
+-->
+	:mod.tempNP = {kind = "MOD"}
+
+
+Rule: mod2
+Priority: 50
+(
+	{Token.category == "ABR"}|
+	{Token.category == "ADJ"}|
+	({Token.category == "ADJ"}({Token.category == "KON"}{Token.category == "ADJ"})*)|
+	{Token.category == "NUM"}|
+	{Number}
+):mod
+-->
+	:mod.tempNP = {kind = "MOD2"}
+
+
+Rule: head
+Priority: 50
+(
+	{Token.category == "NAM"}|
+	{Token.category == "NOM"}|
+	{Token.category == "NPR"}|
+	{Token.category == "PRO:PER"}
+):head
+-->
+	:head.tempNP = {kind = "HEAD"}
+
+
+Rule: head
+Priority: 80
+(
+	{Token.Comment == "<unknown>", Token.orth == "upperInitial"}
+	({Token.Comment == "<unknown>", Token.orth == "upperInitial"})*
+):head
+-->
+	:head.tempNP = {kind = "HEAD"}

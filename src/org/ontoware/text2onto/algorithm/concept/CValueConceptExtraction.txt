@@ -1,0 +1,213 @@
+package org.ontoware.text2onto.algorithm.entity.concept;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.TreeSet;
+import java.util.StringTokenizer;
+import java.lang.String;
+
+import org.ontoware.text2onto.corpus.Corpus;
+import org.ontoware.text2onto.corpus.AbstractDocument;
+import org.ontoware.text2onto.reference.DocumentPointer;
+import org.ontoware.text2onto.reference.DocumentPointerStore;
+import org.ontoware.text2onto.reference.ContextVectorStore;
+import org.ontoware.text2onto.pom.POMConcept;
+import org.ontoware.text2onto.pom.POMObject;
+import org.ontoware.text2onto.pom.POMEntity;
+import org.ontoware.text2onto.change.POMStrategy;
+import org.ontoware.text2onto.change.Change;
+import org.ontoware.text2onto.linguistic.LinguisticAnalyser;
+import org.ontoware.text2onto.algorithm.entity.AbstractEntityExtraction;
+
+
+/*
+ * needs:    -
+ * produces: DocumentPointers (POMConcepts)
+ *
+ * input:    -
+ * output:   POMConcepts
+ *
+ * @author Matthias Hartung (hartung@urz.uni-heidelberg.de)
+ */
+
+
+public class CValueConceptExtraction extends AbstractEntityExtraction implements AbstractConceptExtraction {
+
+	protected HashMap m_hmLength2EntityList = new HashMap();	// contains all concept candidates from whole corpus !
+	protected int m_iMaxLen = 0;
+	protected double m_dProbSum = 0.0;
+
+
+	protected DocumentPointerStore getEntityPointerStore(){
+		return m_refManager.getConceptPointerStore();
+	}
+
+	protected double ld( double x ){
+		return ( Math.log( x ) / Math.log( 2.0 ) );	// log_2
+	}
+
+
+	protected Double getProbability( POMObject object, int iPointers, POMStrategy strategy ){
+		Double dProb;
+		int iLength = getEntityLength( object.getLabel() );
+		if( iLength == 1)
+			return new Double(0.0);
+		else
+			return getCValue( object, iLength );
+	}
+
+
+	protected Double getCValue( POMObject entity, int iLen ){
+		DocumentPointerStore dpsStore = getEntityPointerStore();
+		int iFValue = dpsStore.getDocumentPointers( entity ).size(); 	// note: independent occurences only !
+		int[] iTCValues = new int[2];
+		System.out.println( "Considering string of length " + iLen + ": " + entity + " " + iFValue );
+		iTCValues = getFreqAsNested( entity.getLabel(), iLen );
+		if ( iLen == m_iMaxLen | iTCValues[0] == 0 ){
+			System.out.println( "\t" + entity.getLabel() + ": " + iFValue + ", 0, 0\n" );
+			return new Double( ld( iLen ) * iFValue );
+		}
+		else
+		{
+			int iTotalFreq = iFValue + iTCValues[0];
+			System.out.println( "\t" + entity.getLabel() + ": " + iFValue + ", " + iTCValues[0] + ", " + iTCValues[1] + "\n" );
+			return new Double( ld( iLen ) * (iTotalFreq - (1 / iTCValues[1]) * iTCValues[0]) );
+		}
+	}
+
+
+	protected int[] getFreqAsNested( String sLabel, int iKey ){
+		// returns frequency of an entity occurring as a nested term within another longer entity !
+		System.out.println("Searching for longer entities of " + sLabel + "..." );
+		HashSet hsMatches = new HashSet();
+		DocumentPointerStore dpsStore = getEntityPointerStore();
+		int iNestedFreq = 0;
+		while ( iKey < m_iMaxLen )
+		{
+			iKey += 1;
+			if ( !m_hmLength2EntityList.containsKey( new Integer(iKey) ) )
+			{
+				iKey += 1;
+				continue;
+			}
+			HashSet hsAllLongerTerms = (HashSet)m_hmLength2EntityList.get( new Integer(iKey) );
+			System.out.println( "Longer Terms: " + hsAllLongerTerms );
+			Iterator longerIter = hsAllLongerTerms.iterator();
+			while( longerIter.hasNext() )
+			{
+				POMEntity longerEnt = (POMEntity)longerIter.next();
+				String sLongerLabel = longerEnt.getLabel();
+				if ( sLongerLabel.indexOf( sLabel ) > 0 )
+				{
+					iNestedFreq += (int)dpsStore.getDocumentPointers( longerEnt ).size();
+					hsMatches.add( longerEnt );
+					System.out.println("Matched longer entity: " + longerEnt + " " + iNestedFreq );
+				}
+			}
+		}
+		int tcValues[] = new int[]{ iNestedFreq, hsMatches.size() };
+		return tcValues;
+	}
+
+
+	protected ArrayList getSubstrings( String sLabel, int iKey ){
+		ArrayList alSubstrings = new ArrayList();
+		for( iKey = iKey-1; iKey >= 0; iKey--){
+			if (m_hmLength2EntityList.containsKey( new Integer(iKey) )){
+				alSubstrings.addAll( 0, (HashSet)m_hmLength2EntityList.get( new Integer(iKey) ) );	// all shorter strings !
+			}
+		}
+		Iterator subIter = alSubstrings.iterator();
+		while( subIter.hasNext() )
+		{
+			POMEntity subEntity = (POMEntity)subIter.next();
+			if ( !(sLabel.indexOf( subEntity.getLabel() ) > 0) ){
+				subIter.remove();
+			}
+		}
+		System.out.println( "Substrings for " + sLabel + ": " + alSubstrings );
+		return alSubstrings;		// all "true" substrings, i.e. shorter strings containing sLabel !
+	}
+
+
+
+	protected int getEntityLength( String sLabel ){
+		StringTokenizer tok = new StringTokenizer( sLabel );
+		return tok.countTokens();
+		}
+
+
+
+	protected void createHMLength2EntityList( POMEntity ent ){
+		int iLen = getEntityLength( ent.getLabel() );
+		if ( iLen > m_iMaxLen){
+			m_iMaxLen = iLen;
+		}
+		if (m_hmLength2EntityList.containsKey( new Integer(iLen) ))
+		{
+			HashSet hsObjWithLen = (HashSet)m_hmLength2EntityList.get( new Integer(iLen) );
+   			hsObjWithLen.add( ent );
+			m_hmLength2EntityList.put( new Integer(iLen), hsObjWithLen );
+		}
+		else
+		{
+			HashSet hsObjWithLen = new HashSet();
+			hsObjWithLen.add( ent );
+			m_hmLength2EntityList.put( new Integer(iLen), hsObjWithLen );
+
+		}
+	}
+
+
+	protected HashMap getEntity2Pointers( AbstractDocument doc ){
+  		HashMap hmEntity2Pointers = new HashMap();
+		List allPointers = m_analyser.getDocumentPointers( doc, LinguisticAnalyser.CONCEPT );
+		Iterator pIter = allPointers.iterator();
+		while( pIter.hasNext() )
+		{
+			DocumentPointer entityPointer = (DocumentPointer)pIter.next();
+			StringBuffer sbEntity = new StringBuffer();
+			List stems = m_analyser.getTokenStems( entityPointer );
+			Iterator sIter = stems.iterator();
+			while( sIter.hasNext() )
+			{
+				sbEntity.append( (String)sIter.next() );
+				if( sIter.hasNext() ){
+					sbEntity.append( " " );
+				}
+			}
+			POMEntity entity = new POMConcept( sbEntity.toString() );
+			List pointers = (List)hmEntity2Pointers.get( entity );
+			if( pointers == null ){
+				pointers = new ArrayList();
+				hmEntity2Pointers.put( entity, pointers );
+			}
+			pointers.add( entityPointer );
+			createHMLength2EntityList( entity );
+		}
+		return hmEntity2Pointers;
+	}
+
+
+	protected ArrayList normalize( ArrayList alList ){
+		Iterator alIter = alList.iterator();
+		while( alIter.hasNext() )
+		{
+			Change chg = (Change)alIter.next();
+			POMObject obj = (POMObject)chg.getObject();
+			obj.setProbability( obj.getProbability() / m_dProbSum );
+		}
+		return alList;
+	}
+
+
+	protected void prepareNormalization( Double dProb ){
+		m_dProbSum += dProb.doubleValue();
+	}
+
+}
+

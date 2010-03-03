@@ -1,0 +1,5 @@
+package org.ontoware.text2onto.algorithm.relation.partOf;
+  
+
+public interface AbstractPartOfRelationExtraction { 
+}

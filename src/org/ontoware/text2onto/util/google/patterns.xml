@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<patterns>
+	<pattern type="SubclassOfRelation">
+		<range>
+			<numerus>plural</numerus>
+		</range>
+		<glue>such as</glue>
+		<domain>
+			<numerus>plural</numerus>
+		</domain>
+	</pattern>
+</patterns>

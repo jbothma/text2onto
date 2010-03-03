@@ -1,0 +1,88 @@
+Phase: Linguistic2
+Input: NounPhrase ProperNounPhrase SpaceToken Token
+Options: control = appelt
+
+Rule: NounPhraseRemove
+(
+	{NounPhrase}
+):np -->
+{
+	//for each Linguistic annotation, which matches the whole noun phrase
+	gate.AnnotationSet np = (gate.AnnotationSet)bindings.get( "np" );
+ 	gate.AnnotationSet tokens = inputAS.get( np.firstNode().getOffset() ).get( "Token" );
+ 	//Sort the annotations
+	List tokensList = new ArrayList(tokens);
+	Collections.sort(tokensList, new gate.util.OffsetComparator());
+	//compare the first token with the following strings
+	Iterator tokensIter = tokensList.iterator();
+ 	gate.Annotation token = (gate.Annotation)tokensIter.next();
+ 	String[] names = new String[6];
+ 	names[0] = "especially";
+ 	names[1] = "such";
+ 	names[2] = "including";
+ 	names[3] = "other";
+ 	names[4] = "another";
+ 	names[5] = "Such";
+ 	boolean delete = false;
+	int i = 0;
+ 	while( !delete && i < 6 )
+ 	{
+ 		if( token.getFeatures().get( "string" ).equals( names[i] ) ) delete = true;
+ 		i++;
+ 	}
+ 	if( delete ){
+ 		try
+ 		{
+ 			Long lStart = (Long)token.getEndNode().getOffset();
+ 			Long start = new Long( lStart.longValue() + 1 );
+ 			outputAS.add( start, np.lastNode().getOffset(), "NounPhrase", ((gate.Annotation)np.iterator().next()).getFeatures() );
+ 			inputAS.remove((gate.Annotation)((gate.AnnotationSet)np.get( "NounPhrase" )).iterator().next());
+ 		} 
+ 		catch ( InvalidOffsetException e1 ){
+            e1.printStackTrace();
+		}
+ 	}
+}
+
+
+Rule: ProperNounPhraseRemove
+(
+	{ProperNounPhrase}
+):pnp -->
+{
+	//for each Linguistic annotation, which matches the whole noun phrase
+	gate.AnnotationSet pnp = (gate.AnnotationSet)bindings.get( "pnp" );
+ 	gate.AnnotationSet tokens = inputAS.get( pnp.firstNode().getOffset()).get( "Token" );
+ 	//Sort the annotations
+	List tokensList = new ArrayList(tokens);
+	Collections.sort(tokensList, new gate.util.OffsetComparator());
+	//compare the first token with the following strings
+	Iterator tokensIter = tokensList.iterator();
+ 	gate.Annotation token = (gate.Annotation)tokensIter.next();
+ 	String[] names = new String[6];
+ 	names[0] = "especially";
+ 	names[1] = "such";
+ 	names[2] = "including";
+ 	names[3] = "other";
+ 	names[4] = "another";
+ 	names[5] = "Such";
+ 	boolean delete = false;
+	int i = 0;
+ 	while( !delete && i < 6 )
+ 	{
+ 		if( token.getFeatures().get( "string" ).equals( names[i]) ) delete = true;
+ 		i++;
+ 	}
+ 	if( delete ){
+ 		try
+ 		{
+ 			Long lStart = (Long)token.getEndNode().getOffset();
+ 			Long start = new Long(lStart.longValue() + 1);
+ 			outputAS.add(start, pnp.lastNode().getOffset(), "ProperNounPhrase", ((gate.Annotation)pnp.iterator().next()).getFeatures());
+ 			inputAS.remove((gate.Annotation)((gate.AnnotationSet)pnp.get( "ProperNounPhrase" )).iterator().next() );
+ 		} 
+ 		catch ( InvalidOffsetException e1 ){
+			e1.printStackTrace();
+		}
+ 	}
+}

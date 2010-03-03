@@ -1,0 +1,121 @@
+Phase: Linguistic_Ger_1
+Options: control = appelt
+
+//Linguistic macro definitions
+
+// Examples: zusammengesetzte Wörter im Deutschen: Johann-Wolfgang-Goethe-Universität, Ohne-mich-Haltung, Trimm-dich-Pfad, 630-Mark-Job.
+Macro: Nomina1
+(
+	(
+		{Token}
+		{Token.string == "-"}
+	)*
+	{Token.category == NN}
+)
+
+// Examples: zusammengesetzte Wörter im Englischen
+Macro: Nomina2
+(
+	(
+		{Token.category == NN}
+		{SpaceToken.kind == space}
+	)*
+	{Token.category == NN}
+)
+
+Macro: Nomina
+(
+		(( Nomina1 ) | (Nomina2))
+)
+
+
+
+//Linguistic rule definitions
+
+// ARTIKEL # ATTRIBUTIVE ADJEKTIVE # NORMALE NOMINA
+Rule: NounPhrase_1
+(
+	(
+		{Token.category == ART}
+		{SpaceToken.kind == space}
+	)?
+	(
+		{Token.category == ADJA}
+		{SpaceToken.kind == space}
+	)*
+	(
+		( Nomina )
+	):np_head
+):np -->
+:np.NounPhrase = { rule = "NounPhrase" },
+:np_head.Head = { rule = "NounPhrase" }
+
+// DEMONSTRATIVPRONOMINA # ATTRIBUTIVE ADJEKTIVE # NORMALE NOMINA
+Rule: NounPhrase_2
+(
+	(
+		{Token.category == PDAT}
+		{SpaceToken.kind == space}
+	)?
+	(
+		{Token.category == ADJA}
+		{SpaceToken.kind == space}
+	)*
+	(
+		(
+		{Token.category == NN}
+		{Token.string == "-"}
+		)*
+		{Token.category == NN}
+	):np_head
+):np -->
+:np.NounPhrase = { rule = "NounPhrase" },
+:np_head.Head = { rule = "NounPhrase" }
+
+// ARTIKEL # ATTRIBUTIVE ADJEKTIVE # EIGENNAME
+Rule: ProperNounPhrase
+(
+	(
+		{Token.category == ART}
+		{SpaceToken.kind == space}
+	)?
+	(
+		{Token.category == ADJA}
+		{SpaceToken.kind == space}
+	)*
+	(
+		(
+			{Token.category == NE}
+			{SpaceToken.kind == space}
+		)*
+		{Token.category == NE}
+	):pnp_head
+):pnp -->
+:pnp.ProperNounPhrase = {rule = "ProperNounPhrase" },
+:pnp_head.Head = { rule = "ProperNounPhrase" }
+
+// DEMONSTRATIVPRONOMINA # ATTRIBUTIVE ADJEKTIVE # EIGENNAME
+Rule: ProperNounPhrase_2
+(
+	(
+		{Token.category == PDAT}
+		{SpaceToken.kind == space}
+	)?
+	(
+		{Token.category == ADJA}
+		{SpaceToken.kind == space}
+	)*
+	(
+		(
+		{Token.category == NN}
+		{Token.string == "-"}
+		)*
+		{Token.category == NN}
+	):pnp_head
+):pnp -->
+:pnp.ProperNounPhrase = {rule = "ProperNounPhrase" },
+:pnp_head.Head = { rule = "ProperNounPhrase" }
+
+
+
+

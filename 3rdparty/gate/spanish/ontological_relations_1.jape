@@ -1,0 +1,369 @@
+Phase: Ontological_Relations_1
+Input: NounPhrase ProperNounPhrase SpaceToken Token NounPhrase1
+Options: control = appelt
+
+// 			Rule Subclass_1
+//
+//			Animales como el perro, el gato y el oso. Entidades financieras, como gestoras y mutualidades.
+//  		Los embutidos como el fuet, el chorizo y el jamon son buenisimos.
+
+rule: Subclass_1
+(
+	(NOUNPHRASE1):superconcept
+	(COMA)?
+	{SpaceToken.kind == space}
+	{Token.string=="como"}
+	{SpaceToken.kind == space}
+	(NOUNPHRASESALTERNATIVES):subconcept
+):subclass1
+-->
+:subclass1.SubclassOfRelation = { rule = "Subclass1" },
+:subconcept.Domain = { rule = "Subclass1" },
+:superconcept.Range = { rule = "Subclass1" }
+
+
+
+// 			Rule Subclass_2
+//
+//			Los perros, los gatos y los osos son animales. Dogs, cats and bears are animals.
+//  		
+
+rule: Subclass_2
+(
+	(NOUNPHRASESALTERNATIVES):subconcept
+	(COMA)?
+	{SpaceToken.kind == space}
+	(
+		{Token.string=="son"}|
+		{Token.string=="eran"}
+	)
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):superconcept
+):subclass2
+-->
+:subclass2.SubclassOfRelation = { rule = "Subclass2" },
+:subconcept.Domain = { rule = "Subclass2" },
+:superconcept.Range = { rule = "Subclass2" }
+
+
+
+// 			Rule Subclass_3
+//
+//			Los grandes pensadores son Platon, Aristoteles y Kant.
+//  		
+
+rule: Subclass_3
+(
+	(NOUNPHRASE1):superconcept
+	{SpaceToken.kind == space}
+	(
+		{Token.string=="son"}|
+		{Token.string=="eran"}
+	)
+	{SpaceToken.kind == space}
+	(NOUNPHRASESALTERNATIVES):subconcept
+):subclass3
+-->
+:subclass3.SubclassOfRelation = { rule = "Subclass3" },
+:subconcept.Domain = { rule = "Subclass3" },
+:superconcept.Range = { rule = "Subclass3" }
+
+
+
+rule: Subclass_4
+(
+	(NOUNPHRASE1):superconcept
+	{SpaceToken.kind == space}
+	({Token.string=="es"}|{Token.string=="son"}|{Token.string=="era"}|{Token.string=="eran"}|{Token.string=="como"})
+	(COMA)
+	{SpaceToken.kind == space}
+	(
+		(
+		{Token.string=="sobre"}
+		{SpaceToken.kind == space}
+		{Token.string=="todo"}
+		)
+		|
+		(
+		{Token.string=="por"}
+		{SpaceToken.kind == space}
+		{Token.string=="ejemplo"}
+		)
+	)
+	(COMA)?
+	{SpaceToken.kind == space}
+	(NOUNPHRASESALTERNATIVES):subconcept
+):subclass4
+-->
+:subclass4.SubclassOfRelation = { rule = "Subclass4" },
+:subconcept.Domain = { rule = "Subclass4" },
+:superconcept.Range = { rule = "Subclass4" }
+
+rule: Subclass_5
+(
+	(NOUNPHRASE4):subconcept
+	{SpaceToken.kind == space}
+	({Token.string=="y"}|{Token.string=="o"})
+	{SpaceToken.kind == space}
+	(
+		{Token.string=="otros"}|
+		{Token.string=="otras"}|
+		{Token.string=="demás"}
+	)
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):superconcept
+):subclass5
+-->
+:subclass5.SubclassOfRelation = { rule = "Subclass_5" },
+:subconcept.Domain = { rule = "Subclass_5" },
+:superconcept.Range = { rule = "Subclass_5" }
+
+
+rule: Subclass_6
+(
+	(NOUNPHRASE1):superconcept
+	({Token.kind == punctuation})?
+	{SpaceToken.kind == space}
+	({Token.string=="especialmente"}|{Token.string=="incluiendo"})
+	{SpaceToken.kind == space}
+	(NOUNPHRASESALTERNATIVES):subconcept
+):subclass6
+-->
+:subclass6.SubclassOfRelation = { rule = "Subclass_6" },
+:subconcept.Domain = { rule = "Subclass_6" },
+:superconcept.Range = { rule = "Subclass_6" }
+
+
+rule: Subclass_7
+(
+	(NOUNPHRASE1):superconcept
+	(COMA)?
+	{SpaceToken.kind == space}
+	({Token.string=="tal"}|{Token.string=="tales"})
+	{SpaceToken.kind == space}
+	{Token.string=="como"}
+	{SpaceToken.kind == space}
+	(NOUNPHRASESALTERNATIVES):subconcept
+):subclass7
+-->
+:subclass7.SubclassOfRelation = { rule = "Subclass_7" },
+:subconcept.Domain = { rule = "Subclass_7" },
+:superconcept.Range = { rule = "Subclass_7" }
+
+rule: Subclass_8
+(
+	(NOUNPHRASE1):subconcept
+	{SpaceToken.kind == space}
+	{Token.string=="es"}
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):superconcept
+):subclass8
+-->
+:subclass8.SubclassOfRelation = { rule = "Subclass_8" },
+:subconcept.Domain = { rule = "Subclass_8" },
+:superconcept.Range = { rule = "Subclass_8" }
+
+
+
+rule: Instance_Of_1
+(
+	(NOUNPHRASE1):concept
+	(
+		{SpaceToken.kind == space}
+		(
+			{Token.string=="tal"}|
+			{Token.string=="tales"}
+		)
+	)?
+	{SpaceToken.kind == space}
+	({Token.string=="como"})
+	({SpaceToken.kind == space})
+	(PROPERNOUNPHRASESALTERNATIVES):instance
+):instance_of_1
+-->
+:instance_of_1.InstanceOfRelation = { rule = "Instance_Of_1" },
+:instance.Domain = { rule = "Instance_Of_1" },
+:concept.Range = {  rule = "Instance_Of_1" }
+
+
+
+rule: Instance_Of_2
+(
+	(PROPERNOUNPHRASE4):instance
+	{SpaceToken.kind == space}
+	({Token.string=="y"}|{Token.string=="o"})
+	(
+		{SpaceToken.kind == space}
+		{Token.string=="todos"}
+		{SpaceToken.kind == space}
+		{Token.string=="los"}
+	)?
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):concept
+):instance_of_2
+-->
+:instance_of_2.InstanceOfRelation = { rule = "Instance_Of_2" },
+:instance.Domain = { rule = "Instance_Of_2" },
+:concept.Range = { rule = "Instance_Of_2" }
+
+rule: Instance_Of_3
+(
+	(NOUNPHRASE1):concept
+	({Token.kind == punctuation})?
+	{SpaceToken.kind == space}
+	({Token.string=="especialmente"}|{Token.string=="incluyendo"})
+	{SpaceToken.kind == space}
+	(PROPERNOUNPHRASESALTERNATIVES):instance
+):instance_of_3
+-->
+:instance_of_3.InstanceOfRelation = { rule = "Instance_Of_3" },
+:instance.Domain = { rule = "Instance_Of_3" },
+:concept.Range = { rule = "Instance_Of_3" }
+
+
+
+rule: Instance_Of_4
+(
+	(PROPERNOUNPHRASESALTERNATIVES):instance
+	({Token.kind == punctuation})?
+	{SpaceToken.kind == space}
+	{Token.string=="como"}
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):concept
+):instance_of_4
+-->
+:instance_of_4.InstanceOfRelation = { rule = "Instance_Of_4" },
+:instance.Domain = { rule = "Instance_Of_4" },
+:concept.Range = { rule = "Instance_Of_4" }
+
+rule: Instance_Of_5
+(
+	(PROPERNOUNPHRASE1):instance
+	({Token.kind == punctuation})?
+	{SpaceToken.kind == space}
+	{Token.string=="es"}
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):concept
+):instance_of_5
+-->
+:instance_of_5.InstanceOfRelation = { rule = "Instance_Of_5" },
+:instance.Domain = { rule = "Instance_Of_5" },
+:concept.Range = { rule = "Instance_Of_5" }
+
+
+
+rule: Instance_Of_6
+(
+	(PROPERNOUNPHRASE1):instance
+	{Token.kind == punctuation}
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):concept
+	{Token.kind == punctuation}
+):instance_of_6
+-->
+:instance_of_6.InstanceOfRelation = { rule = "Instance_Of_6" },
+:instance.Domain = { rule = "Instance_Of_6" },
+:concept.Range = { rule = "Instance_Of_6" }
+
+rule: Instance_Of_7
+(
+	(PROPERNOUNPHRASE1):instance
+	{SpaceToken.kind == space}
+	{Token.string=="("}
+	({SpaceToken.kind == space})?
+	(NOUNPHRASE1):concept
+	({SpaceToken.kind == space})?
+	{Token.string==")"}
+):instance_of_7
+-->
+:instance_of_7.InstanceOfRelation = { rule = "Instance_Of_7" },
+:instance.Domain = { rule = "Instance_Of_7" },
+:concept.Range = { rule = "Instance_Of_7" }
+
+rule: Instance_Of_8
+(
+	(NOUNPHRASE1):concept
+	{SpaceToken.kind == space}
+	(
+		{Token.string=="son"}|
+		{Token.string=="eran"}
+	)
+	{SpaceToken.kind == space}
+	(PROPERNOUNPHRASESALTERNATIVES):instance
+):instance_of_8
+-->
+:instance_of_8.InstanceOfRelation = { rule = "Instance_Of_8" },
+:instance.Domain = { rule = "Instance_Of_8" },
+:concept.Range = { rule = "Instance_Of_8" }
+
+rule: Part
+(
+	(NOUNPHRASESALTERNATIVES):concept1
+	{SpaceToken.kind == space}
+	(
+		{Token.string=="forman"}|
+		{Token.string=="forma"}|
+		{Token.string=="son"}|
+		{Token.string=="es"}
+	)
+	{SpaceToken.kind == space}
+	{Token.string=="parte"}
+	{SpaceToken.kind == space}
+	{Token.string=="de"}
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):concept2
+):part
+-->
+:part.PartOfRelation = { rule = "Part" },
+:concept1.Domain = { rule = "Part" },
+:concept2.Range = { rule = "Part" }
+
+rule: Contains
+(
+	(NOUNPHRASE1):concept1
+	{SpaceToken.kind == space}
+	{Token.string=="contiene"}
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):concept2
+):contains
+-->
+:contains.PartOfRelation = { rule = "Contains" },
+:concept2.Domain = { rule = "Contains" },
+:concept1.Range = { rule = "Contains" }
+
+rule: Consists
+(
+	(NOUNPHRASE1):concept1
+	{SpaceToken.kind == space}
+	{Token.string=="consiste"}
+	{SpaceToken.kind == space}
+	({Token.string=="de"}|{Token.string=="en"})
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):concept2
+):consists
+-->
+:consists.PartOfRelation = { rule = "Consists" },
+:concept1.Domain = { rule = "Consists" },
+:concept2.Range = { rule = "Consists" }
+
+rule: Made_by
+(
+	(NOUNPHRASE1):concept1
+	{SpaceToken.kind == space}
+	({Token.string=="esta"}|{Token.string=="estan"})
+	{SpaceToken.kind == space}
+	(
+		{Token.string=="formado"}|{Token.string=="formados"}|{Token.string=="formada"}|{Token.string=="formadas"}|
+		{Token.string=="constituido"}|{Token.string=="constituidos"}|{Token.string=="constituida"}|{Token.string=="constituidas"}|
+		{Token.string=="compuesto"}|{Token.string=="compuestos"}|{Token.string=="compuesta"}|{Token.string=="compuestas"}|
+		{Token.string=="integrado"}|{Token.string=="integrados"}|{Token.string=="integrada"}|{Token.string=="integradas"}
+	)
+	{SpaceToken.kind == space}
+	{Token.string=="por"}
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1):concept2
+):madeby
+-->
+:madeby.PartOfRelation = { rule = "Made_by" },
+:concept1.Domain = { rule = "Made_by" },
+:concept2.Range = { rule = "Made_by" }

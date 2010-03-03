@@ -1,0 +1,108 @@
+//
+// $Id: np.jape,v 1.1 2006-03-24 12:08:28 jvo Exp $
+//
+// Multilingual Noun Phrase Extractor (MuNPEx)
+// Produces minimal NPs, i.e., no attachments
+// Results stored in "NP" annotations with DET, MOD, HEAD slots
+//
+// (c) 2005--2006 Rene Witte (http://rene-witte.net)
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+
+Phase: NP_Chunking
+Input: Token tempNP Split MultiDocSplit
+Options: control = appelt
+
+
+Rule: NP
+Priority: 50
+(
+	(({tempNP.kind == DET})?):det
+	(({tempNP.kind == MOD})*):mod
+	({tempNP.kind == HEAD}):head
+	(({tempNP.kind == MOD2})*):mod2    // only in French
+):np
+-->
+{
+gate.AnnotationSet det = (gate.AnnotationSet)bindings.get("det");
+gate.AnnotationSet mod = (gate.AnnotationSet)bindings.get("mod");
+gate.AnnotationSet head = (gate.AnnotationSet)bindings.get("head");
+gate.AnnotationSet np = (gate.AnnotationSet)bindings.get("np");
+gate.AnnotationSet mod2 = (gate.AnnotationSet)bindings.get("mod2");
+gate.Annotation headAnn = (gate.Annotation)head.iterator().next();
+gate.FeatureMap features = Factory.newFeatureMap();
+
+
+// offset features
+features.put( "HEAD_END", headAnn.getEndNode().getOffset());
+features.put( "HEAD_START", headAnn.getStartNode().getOffset());
+Long modStart = null;
+Long modEnd = null;
+if( mod != null ) {
+    Iterator modIterator = mod.iterator();
+    gate.Annotation modAnn = (gate.Annotation)modIterator.next();
+    modStart = modAnn.getStartNode().getOffset();
+    modEnd = modAnn.getEndNode().getOffset();
+    while( modIterator.hasNext()) {
+        modAnn = (gate.Annotation)modIterator.next();
+	if( modAnn.getStartNode().getOffset().longValue() < modStart.longValue() )
+            modStart = modAnn.getStartNode().getOffset();
+	if( modAnn.getEndNode().getOffset().longValue() > modEnd.longValue() )
+            modEnd = modAnn.getEndNode().getOffset();
+    }
+    //features.put( "MOD_START", modStart );
+    //features.put( "MOD_END", modEnd );
+}
+if( det != null ) {
+    gate.Annotation detAnn = (gate.Annotation)det.iterator().next();
+    //features.put( "DET_END", detAnn.getEndNode().getOffset());
+    //features.put( "DET_START", detAnn.getStartNode().getOffset());
+}
+
+// content features
+try {
+    features.put( "HEAD", doc.getContent().getContent( headAnn.getStartNode().getOffset(), headAnn.getEndNode().getOffset() ));
+} catch (Exception ex) {
+    System.out.println( "Exception in de-np.jape: " + ex );
+}
+if( mod != null ) {
+    try {
+        features.put( "MOD", doc.getContent().getContent( modStart, modEnd ) );
+    } catch (Exception ex) {
+        System.out.println( "Exception in de-np.jape: " + ex );
+    }
+}
+if( det != null ) {
+    gate.Annotation detAnn = (gate.Annotation)det.iterator().next();
+    try {
+        features.put( "DET", doc.getContent().getContent( detAnn.getStartNode().getOffset(), detAnn.getEndNode().getOffset() ));
+    } catch (Exception ex) {
+        System.out.println( "Exception in de-np.jape: " + ex );
+    }
+}
+if( mod2 != null ) {
+    gate.Annotation mod2Ann = (gate.Annotation)mod2.iterator().next();
+    try {
+        features.put( "MOD2", doc.getContent().getContent( mod2Ann.getStartNode().getOffset(), mod2Ann.getEndNode().getOffset() ));
+    } catch (Exception ex) {
+        System.out.println( "Exception in de-np.jape: " + ex );
+    }
+}
+
+// check for a multi-document split
+gate.AnnotationSet mdSplit = null;
+gate.AnnotationSet mdSplitSet = doc.getAnnotations().get("MultiDocSplit");
+if( mdSplitSet != null )
+    mdSplit = mdSplitSet.getContained( np.firstNode().getOffset(), np.lastNode().getOffset() );
+
+// only add NP if it does not cross document boundaries
+// (happens with some NE JAPE grammars, not the best solution...)
+if( mdSplit == null || mdSplit.size() == 0 ) {
+    //features.put( "rule", "NP" );
+    outputAS.add( np.firstNode(), np.lastNode(), "NP", features );
+}
+}

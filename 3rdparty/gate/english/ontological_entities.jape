@@ -1,0 +1,17 @@
+Phase: Ontological_Entities
+Input: NounPhrase ProperNounPhrase Head
+Options: control = appelt
+
+rule: Concept
+(
+	{ Head.rule == "NounPhrase" }
+):concept
+-->
+:concept.Concept = { rule = "Concept" }
+
+rule: Instance
+(
+	{ Head.rule == "ProperNounPhrase" }
+):instance
+-->
+:instance.Instance = { rule = "Instance" }

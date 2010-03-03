@@ -1,0 +1,256 @@
+Phase: Ontological_Ger_2
+Input: InstanceOfRelation NounPhrase PartOfRelation ProperNounPhrase SpaceToken SubclassOfRelation Token
+Options: control = appelt
+
+rule: SetSubclassOfEntities
+	({SubclassOfRelation}):subclassOf
+-->
+{
+	//for each SubclassOf relation
+	gate.AnnotationSet asSubcl = (gate.AnnotationSet)bindings.get( "subclassOf" );
+	gate.AnnotationSet asSubclass = (gate.AnnotationSet)asSubcl.get( "SubclassOfRelation" );
+	//System.out.println( "asSubclass " + asSubclass.toString() );
+	DocumentContent docContent = doc.getContent();
+
+	if( asSubclass != null )
+	{
+		Long lStart = asSubclass.firstNode().getOffset();
+		Long lEnd = asSubclass.lastNode().getOffset();
+
+		//change the domain set
+		gate.AnnotationSet asDomain = inputAS.get( lStart, lEnd ).get( "Domain" );
+		Iterator asDomainIter = asDomain.iterator();
+		while( asDomainIter.hasNext() )
+		{
+			gate.FeatureMap fNewFeatures = Factory.newFeatureMap();
+			gate.Annotation aDomain=(gate.Annotation)asDomainIter.next();
+			gate.FeatureMap fTemp = Factory.newFeatureMap();
+			fTemp.put( "type", "Head" );
+			fNewFeatures.put( "rule", (String)aDomain.getFeatures().get( "rule" ) );
+			gate.AnnotationSet asLinguistic = inputAS.get( aDomain.getStartNode().getOffset(), aDomain.getEndNode().getOffset() ).get( "NounPhrase", fTemp );
+			if( asLinguistic != null )
+			{
+				Iterator asLinguisticIter = asLinguistic.iterator();
+				while( asLinguisticIter.hasNext() )
+				{
+					try
+					{
+						gate.Annotation aLinguistic = (gate.Annotation)asLinguisticIter.next();
+						//System.out.println( "aLinguistic " +aLinguistic.toString() );
+						if( aLinguistic.getFeatures().containsKey( "type" ) && aLinguistic.getFeatures().containsValue( "Head" ) )
+						{
+							String contentAnnot = docContent.getContent( aLinguistic.getStartNode().getOffset(), aLinguistic.getEndNode().getOffset() ).toString();
+							outputAS.add( aLinguistic.getStartNode(), aLinguistic.getEndNode(), "Domain", fNewFeatures );
+							//System.out.println( "extractedInformation: " + contentAnnot);
+							inputAS.remove(aDomain);
+						}
+					} catch ( InvalidOffsetException e1 ) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		}
+
+		//change the range set
+		gate.AnnotationSet asRange = inputAS.get( lStart, lEnd ).get( "Range" );
+		Iterator asRangeIter = asRange.iterator();
+		while( asRangeIter.hasNext() )
+		{
+			gate.FeatureMap fNewFeatures = Factory.newFeatureMap();
+			gate.Annotation aRange=(gate.Annotation)asRangeIter.next();
+			gate.FeatureMap fTemp = Factory.newFeatureMap();
+			fTemp.put( "type", "Head" );
+			fNewFeatures.put( "rule", (String)aRange.getFeatures().get( "rule" ) );
+			gate.AnnotationSet asLinguistic = inputAS.get( aRange.getStartNode().getOffset(), aRange.getEndNode().getOffset() ).get( "NounPhrase", fTemp );
+			if( asLinguistic != null )
+			{
+				Iterator asLinguisticIter = asLinguistic.iterator();
+				while( asLinguisticIter.hasNext() )
+				{
+					try
+					{
+						gate.Annotation aLinguistic = (gate.Annotation)asLinguisticIter.next();
+						//System.out.println( "aLinguistic " +aLinguistic.toString() );
+						if( aLinguistic.getFeatures().containsKey( "type" ) && aLinguistic.getFeatures().containsValue( "Head" ) )
+						{
+							String contentAnnot = docContent.getContent( aLinguistic.getStartNode().getOffset(), aLinguistic.getEndNode().getOffset() ).toString();
+							outputAS.add( aLinguistic.getStartNode(), aLinguistic.getEndNode(), "Range", fNewFeatures );
+							//System.out.println( "extractedInformation: " + contentAnnot);
+							inputAS.remove(aRange);
+						}
+					} catch ( InvalidOffsetException e1 ) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		}
+	}
+}
+
+rule: SetInstanceOfEntities
+	({InstanceOfRelation}):instanceOf
+-->
+{
+	//for each instanceOf relation
+	gate.AnnotationSet asInst = (gate.AnnotationSet)bindings.get( "instanceOf" );
+	gate.AnnotationSet asInstance = (gate.AnnotationSet)asInst.get( "InstanceOfRelation" );
+	//System.out.println("asInstance " +asInstance.toString() );
+	DocumentContent docContent = doc.getContent();
+	if( asInstance != null )
+	{
+		Long lStart = asInstance.firstNode().getOffset();
+		Long lEnd = asInstance.lastNode().getOffset();
+
+		//change the domain set
+		gate.AnnotationSet asDomain = inputAS.get( lStart, lEnd ).get( "Domain" );
+		Iterator asDomainIter = asDomain.iterator();
+		while( asDomainIter.hasNext() )
+		{
+			gate.FeatureMap fNewFeatures = Factory.newFeatureMap();
+			gate.Annotation aDomain=(gate.Annotation)asDomainIter.next();
+			gate.FeatureMap fTemp = Factory.newFeatureMap();
+			fTemp.put( "type", "Head" );
+			fNewFeatures.put( "rule", (String)aDomain.getFeatures().get( "rule" ) );
+			gate.AnnotationSet asLinguistic = inputAS.get( aDomain.getStartNode().getOffset(), aDomain.getEndNode().getOffset() ).get( "ProperNounPhrase", fTemp );
+			if( asLinguistic != null )
+			{
+				Iterator asLinguisticIter = asLinguistic.iterator();
+				while( asLinguisticIter.hasNext() )
+				{
+					try
+					{
+						gate.Annotation aLinguistic = (gate.Annotation)asLinguisticIter.next();
+						//System.out.println( "aLinguistic " +aLinguistic.toString() );
+						if( aLinguistic.getFeatures().containsKey( "type" ) && aLinguistic.getFeatures().containsValue( "Head" ) )
+						{
+							String contentAnnot = docContent.getContent( aLinguistic.getStartNode().getOffset(), aLinguistic.getEndNode().getOffset() ).toString();
+							outputAS.add( aLinguistic.getStartNode(), aLinguistic.getEndNode(), "Domain", fNewFeatures );
+							//System.out.println( "extractedInformation: " + contentAnnot);
+							inputAS.remove(aDomain);
+						}
+					} catch ( InvalidOffsetException e1 ) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		}
+
+		//change the range set
+		gate.AnnotationSet asRange = inputAS.get( lStart, lEnd ).get( "Range" );
+		Iterator asRangeIter = asRange.iterator();
+		while( asRangeIter.hasNext() )
+		{
+			gate.FeatureMap fNewFeatures = Factory.newFeatureMap();
+			gate.Annotation aRange=(gate.Annotation)asRangeIter.next();
+			gate.FeatureMap fTemp = Factory.newFeatureMap();
+			fTemp.put( "type", "Head" );
+			fNewFeatures.put( "rule", (String)aRange.getFeatures().get( "rule" ) );
+			gate.AnnotationSet asLinguistic = inputAS.get( aRange.getStartNode().getOffset(), aRange.getEndNode().getOffset() ).get( "NounPhrase", fTemp );
+			if( asLinguistic != null )
+			{
+				Iterator asLinguisticIter = asLinguistic.iterator();
+				while( asLinguisticIter.hasNext() )
+				{
+					try
+					{
+						gate.Annotation aLinguistic = (gate.Annotation)asLinguisticIter.next();
+						//System.out.println( "aLinguistic " +aLinguistic.toString() );
+						if( aLinguistic.getFeatures().containsKey( "type" ) && aLinguistic.getFeatures().containsValue( "Head" ) )
+						{
+							String contentAnnot = docContent.getContent( aLinguistic.getStartNode().getOffset(), aLinguistic.getEndNode().getOffset() ).toString();
+							outputAS.add( aLinguistic.getStartNode(), aLinguistic.getEndNode(), "Range", fNewFeatures );
+							//System.out.println( "extractedInformation: " + contentAnnot);
+							inputAS.remove(aRange);
+						}
+					} catch ( InvalidOffsetException e1 ) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		}
+	}
+}
+
+rule: SetPartOfEntities
+	({PartOfRelation}):partOf
+-->
+{
+	//for each partOf relation
+	gate.AnnotationSet asPa = (gate.AnnotationSet)bindings.get( "partOf" );
+	gate.AnnotationSet asPart = (gate.AnnotationSet)asPa.get( "PartOfRelation" );
+	//System.out.println( "asPart " +asPart.toString() );
+	DocumentContent docContent = doc.getContent();
+	if( asPart != null )
+	{
+		Long lStart = asPart.firstNode().getOffset();
+		Long lEnd = asPart.lastNode().getOffset();
+
+		//change the domain set
+		gate.AnnotationSet asDomain = inputAS.get( lStart, lEnd ).get( "Domain" );
+		Iterator asDomainIter = asDomain.iterator();
+		while( asDomainIter.hasNext() )
+		{
+			gate.FeatureMap fNewFeatures = Factory.newFeatureMap();
+			gate.Annotation aDomain=(gate.Annotation)asDomainIter.next();
+			gate.FeatureMap fTemp = Factory.newFeatureMap();
+			fTemp.put( "type", "Head" );
+			fNewFeatures.put( "rule", (String)aDomain.getFeatures().get( "rule" ) );
+			gate.AnnotationSet asLinguistic = inputAS.get( aDomain.getStartNode().getOffset(), aDomain.getEndNode().getOffset() ).get( "NounPhrase", fTemp );
+			if( asLinguistic != null )
+			{
+				Iterator asLinguisticIter = asLinguistic.iterator();
+				while( asLinguisticIter.hasNext() )
+				{
+					try
+					{
+						gate.Annotation aLinguistic = (gate.Annotation)asLinguisticIter.next();
+						//System.out.println( "aLinguistic " +aLinguistic.toString() );
+						if( aLinguistic.getFeatures().containsKey( "type" ) && aLinguistic.getFeatures().containsValue( "Head" ) )
+						{
+							String contentAnnot = docContent.getContent( aLinguistic.getStartNode().getOffset(), aLinguistic.getEndNode().getOffset() ).toString();
+							outputAS.add( aLinguistic.getStartNode(), aLinguistic.getEndNode(), "Domain", fNewFeatures );
+							//System.out.println( "extractedInformation: " + contentAnnot);
+							inputAS.remove(aDomain);
+						}
+					} catch ( InvalidOffsetException e1 ) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		}
+
+		//change the range set
+		gate.AnnotationSet asRange = inputAS.get( lStart, lEnd ).get( "Range" );
+		Iterator asRangeIter = asRange.iterator();
+		while( asRangeIter.hasNext() )
+		{
+			gate.FeatureMap fNewFeatures = Factory.newFeatureMap();
+			gate.Annotation aRange=(gate.Annotation)asRangeIter.next();
+			gate.FeatureMap fTemp = Factory.newFeatureMap();
+			fTemp.put( "type", "Head" );
+			fNewFeatures.put( "rule", (String)aRange.getFeatures().get( "rule" ) );
+			gate.AnnotationSet asLinguistic = inputAS.get( aRange.getStartNode().getOffset(), aRange.getEndNode().getOffset() ).get( "NounPhrase", fTemp );
+			if( asLinguistic != null )
+			{
+				Iterator asLinguisticIter = asLinguistic.iterator();
+				while( asLinguisticIter.hasNext() )
+				{
+					try
+					{
+						gate.Annotation aLinguistic = (gate.Annotation)asLinguisticIter.next();
+						//System.out.println( "aLinguistic " +aLinguistic.toString() );
+						if( aLinguistic.getFeatures().containsKey( "type" ) && aLinguistic.getFeatures().containsValue( "Head" ) )
+						{
+							String contentAnnot = docContent.getContent( aLinguistic.getStartNode().getOffset(), aLinguistic.getEndNode().getOffset() ).toString();
+							outputAS.add( aLinguistic.getStartNode(), aLinguistic.getEndNode(), "Range", fNewFeatures );
+							//System.out.println( "extractedInformation: " + contentAnnot);
+							inputAS.remove(aRange);
+						}
+					} catch ( InvalidOffsetException e1 ) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		}
+	}
+}

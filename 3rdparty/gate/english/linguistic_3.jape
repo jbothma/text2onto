@@ -1,0 +1,54 @@
+Phase: Linguistic3
+Input: NounPhrase SpaceToken Token ProperNounPhrase
+Options: control = appelt
+
+Rule: TransitiveVerbPhrase
+(
+	({NounPhrase}|{ProperNounPhrase}):subject 
+		{SpaceToken.kind == space}
+	({Token.category == VBZ}):verb
+		{SpaceToken.kind == space}
+	({NounPhrase}|{ProperNounPhrase}):object 
+):transitive -->
+:transitive.TransitiveVerbPhrase = { rule = "TransitiveVerbPhrase" },
+:verb.Verb = { rule = "TransitiveVerbPhrase" },
+:subject.Subject = { rule = "TransitiveVerbPhrase" },
+:object.Object = { rule = "TransitiveVerbPhrase" }
+
+
+Rule: IntransitivePPVerbPhrase
+(
+	({NounPhrase}|{ProperNounPhrase}):subject
+		{SpaceToken.kind == space}
+	({Token.category == VBZ}):verb
+		{SpaceToken.kind == space}
+	({Token.category == IN}):prep
+		{SpaceToken.kind == space}
+	({NounPhrase}|{ProperNounPhrase}):pobject
+):intransitivePP -->
+:intransitivePP.IntransitivePPVerbPhrase = { rule = "IntransitivePPVerbPhrase" },
+:verb.Verb = { rule = "IntransitivePPVerbPhrase" },
+:subject.Subject = { rule = "IntransitivePPVerbPhrase" },
+:prep.Preposition = { rule = "IntransitivePPVerbPhrase" },
+:pobject.PObject = { rule = "IntransitivePPVerbPhrase" }
+
+
+Rule: TransitivePPVerbPhrase
+(
+	({NounPhrase}|{ProperNounPhrase}):subject
+		{SpaceToken.kind == space}
+	({Token.category == VBZ}):verb
+		{SpaceToken.kind == space}
+	({NounPhrase}|{ProperNounPhrase}):object
+		{SpaceToken.kind == space}
+	({Token.category == IN}):prep
+		{SpaceToken.kind == space}
+	({NounPhrase}|{ProperNounPhrase}):pobject
+):transitivePP -->
+:transitivePP.TransitivePPVerbPhrase = { rule = "TransitivePPVerbPhrase" },
+:verb.Verb = { rule = "TransitivePPVerbPhrase" },
+:subject.Subject = { rule = "TransitivePPVerbPhrase" },
+:object.Object = { rule = "TransitiveVerbPhrase" },
+:prep.Preposition = { rule = "TransitivePPVerbPhrase" },
+:pobject.PObject = { rule = "TransitivePPVerbPhrase" }
+

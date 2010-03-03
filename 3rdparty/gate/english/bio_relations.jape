@@ -1,0 +1,56 @@
+Phase: Bio_Relations
+Input: NounPhrase ProperNounPhrase SpaceToken Token
+Options: control = brill	
+
+rule: Bio_SubclassOfRelation1
+(
+	{Token.category == JJ}
+	{SpaceToken.kind == space}
+	(
+		( 
+			{Token.category == NN}
+		)*
+		{SpaceToken.kind == space}
+		{Token.category == NN}
+	):superconcept
+):subclassOf
+-->
+:subclassOf.SubclassOfRelation = { rule = "Bio_SubclassOfRelation1" },
+:subclassOf.Domain = { rule = "Bio_SubclassOfRelation1" },
+:superconcept.Range = { rule = "Bio_SubclassOfRelation1" }
+
+
+rule: Bio_SubclassOfRelation2
+(
+	{Token.category == NN}
+):noun
+-->
+{
+	gate.AnnotationSet nouns = (gate.AnnotationSet)bindings.get( "noun" );
+ 	gate.AnnotationSet tokens = inputAS.get( nouns.firstNode().getOffset() ).get( "Token" );
+	List tokensList = new ArrayList( tokens );
+	Collections.sort( tokensList, new gate.util.OffsetComparator() );
+	Iterator tokensIter = tokensList.iterator();
+ 	gate.Annotation token = (gate.Annotation)tokensIter.next();
+ 	String sToken = (String)token.getFeatures().get( "string" );
+ 	if( sToken.endsWith( "cyte" )	|| sToken.endsWith( "cytes" ) )
+ 	{
+ 		try {
+ 			outputAS.add( nouns.firstNode().getOffset(), nouns.lastNode().getOffset(), "SubclassOfRelation", Factory.newFeatureMap() );
+			gate.AnnotationSet rels = inputAS.get( nouns.firstNode().getOffset() ).get( "SubclassOfRelation" );
+			((gate.Annotation)rels.iterator().next()).getFeatures().put( "rule", "Bio_SubclassOfRelation2" );
+ 		
+ 			outputAS.add( nouns.firstNode().getOffset(), nouns.lastNode().getOffset(), "Domain", Factory.newFeatureMap() );
+			gate.AnnotationSet domains = inputAS.get( nouns.firstNode().getOffset() ).get( "Domain" );
+			((gate.Annotation)domains.iterator().next()).getFeatures().put( "rule", "Bio_SubclassOfRelation2" );
+ 			
+  			outputAS.add( nouns.firstNode().getOffset(), nouns.lastNode().getOffset(), "Range", Factory.newFeatureMap() );
+			gate.AnnotationSet ranges = inputAS.get( nouns.firstNode().getOffset() ).get( "Range" );
+			((gate.Annotation)ranges.iterator().next()).getFeatures().put( "rule", "Bio_SubclassOfRelation2" );
+			((gate.Annotation)ranges.iterator().next()).getFeatures().put( "string", "cell" );
+  		}
+  		catch( InvalidOffsetException e ){
+  			e.printStackTrace();
+  		}
+  	}
+}

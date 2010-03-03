@@ -1,0 +1,111 @@
+Phase: Linguistic1
+Options: control = appelt
+
+//Linguistic rule definitions
+
+Rule: NounPhrase
+(
+	(
+		{Token.category == DT}
+		{SpaceToken.kind == space}
+	)?
+	(
+		({Token.category == JJ}|{Token.category == VBG})
+		{SpaceToken.kind == space}
+	)*
+	(   (
+			({Token.category == NN} | {Token.category == NNS})
+			{SpaceToken.kind == space}
+		)*
+		({Token.category == NN} | {Token.category == NNS})
+	):np_head
+):np -->
+:np.NounPhrase = { rule = "NounPhrase" },
+:np_head.Head = { rule = "NounPhrase" }
+
+Rule: ProperNounPhrase
+(
+	(
+		{Token.category == DT}
+		{SpaceToken.kind == space}
+	)?
+	(
+		({Token.category == JJ}|{Token.category == VBG})
+		{SpaceToken.kind == space}
+	)*
+	(   (
+			({Token.category == NNPS} | {Token.category == NNP})
+			{SpaceToken.kind == space}
+		)*
+		({Token.category == NNPS} | {Token.category == NNP})
+	):pnp_head
+):pnp -->
+:pnp.ProperNounPhrase = { rule = "ProperNounPhrase" },
+:pnp_head.Head = { rule = "ProperNounPhrase" }
+
+
+//Linguistic macro definitions
+
+Macro: ProperNounPhrase1
+(
+	{ProperNounPhrase}
+)
+
+Macro: ProperNounPhrase2
+(
+	(
+		({Token.string=="or"}|{Token.string=="and"})
+		{SpaceToken.kind == space}
+		(ProperNounPhrase1)
+	)+
+)
+
+Macro: ProperNounPhrase4
+(
+	(ProperNounPhrase1)
+	(
+	{Token.kind == punctuation}
+	{SpaceToken.kind == space}
+	(ProperNounPhrase1)
+	)*
+)
+
+Macro: ProperNounPhrasesAlternatives
+(
+	(ProperNounPhrase4)
+	(
+		{SpaceToken.kind == space}
+		(ProperNounPhrase2)
+	)*
+)
+
+Macro: NounPhrase1
+(
+	{NounPhrase}
+)
+
+Macro: NounPhrase2
+(
+	{SpaceToken.kind == space}
+	({Token.string=="or"}|{Token.string=="and"})
+	{SpaceToken.kind == space}
+	(NounPhrase1)
+)
+
+Macro: NounPhrase4
+(
+	(NounPhrase1)
+	(
+	{Token.kind == punctuation}
+	{SpaceToken.kind == space}
+	(NounPhrase1)
+	)*
+)
+
+Macro: NounPhrasesAlternatives
+(
+	(NounPhrase4)
+	(
+		(NounPhrase2)
+	)*
+)

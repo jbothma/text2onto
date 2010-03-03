@@ -1,0 +1,321 @@
+Phase: Linguistic1
+Options: control = appelt
+
+Macro: DETERMINANT
+(
+	(
+	{Token.pos == ART}|
+	{Token.pos == QU}|
+	{Token.pos == ORD}|
+	{Token.pos == CARD}|
+	{Token.pos == CODE}|
+	{Token.pos == DM}|
+	{Token.pos == INT}|
+	{Token.pos == PPO}
+	)
+)
+
+Macro: ADJECTIVE
+(
+	{Token.pos == ADJ}
+)
+
+Macro: ADVERB
+(
+	{Token.pos == ADV }
+)
+
+
+Macro: CONJUNCTION
+(
+	(
+		{Token.pos == CC }|
+		{Token.pos == CCNEG }
+	)
+)
+
+Macro: PROPERNOUN
+(
+	(
+		{Token.pos == NP}|
+		{Token.pos == ACRNM}
+	)
+)
+
+Macro: NOUN
+(	
+	(
+		{Token.pos == NC}|
+		{Token.pos == NMON}
+	)
+)
+
+
+Macro: PREPOSITION
+(
+	{Token.pos == PREP}|
+	{Token.pos == PAL}|
+	{Token.pos == PDEL}
+)
+
+Macro: SUBORDINATECONECTOR
+(	
+	{Token.pos == REL}|
+	{Token.pos == CQUE}|
+	{Token.pos == CSUBX}|
+	{Token.pos == CSUBI}|
+	{Token.pos == CSUBF}
+)
+
+
+Macro: COMA
+(
+	{Token.string == "," }
+)
+
+Macro: PREVERB
+(
+	{Token.pos == PPO}|
+	{Token.pos == PPC}|
+	{Token.pos == SE}|
+	{Token.pos == PPX}|
+	{Token.pos == NEG}
+)
+
+Macro: VERB
+(	
+	{Token.pos == VEfin}|
+	{Token.pos == VEger}|
+	{Token.pos == VE}|
+	{Token.pos == VHfin}|
+	{Token.pos == VHger}|
+	{Token.pos == VHinf}|
+	{Token.pos == VLfin}|
+	{Token.pos == VLger}|
+	{Token.pos == VLinf}|
+	{Token.pos == VMfin}|
+	{Token.pos == VMger}|
+	{Token.pos == VHfin}|
+	{Token.pos == VLinf}|
+	{Token.pos == VMfin}|
+	{Token.pos == VMger}|
+	{Token.pos == VMinf}|
+	{Token.pos == VM}|
+	{Token.pos == VSfin}|
+	{Token.pos == VSger}|
+	{Token.pos == VSinf}|
+	{Token.pos == VCLI}|	
+	{Token.pos == VS}
+)
+
+Macro: VERB2
+(
+	{Token.pos == VEfin}|
+	{Token.pos == VEger}|
+	{Token.pos == VE}|
+	{Token.pos == VHfin}|
+	{Token.pos == VHger}|
+	{Token.pos == VHinf}|
+	{Token.pos == VLfin}|
+	{Token.pos == VLger}|
+	{Token.pos == VLinf}|
+	{Token.pos == VMfin}|
+	{Token.pos == VMger}|
+	{Token.pos == VHfin}|
+	{Token.pos == VLinf}|
+	{Token.pos == VMfin}|
+	{Token.pos == VMger}|
+	{Token.pos == VMinf}|
+	{Token.pos == VM}|
+	{Token.pos == VSfin}|
+	{Token.pos == VSger}|
+	{Token.pos == VSinf}|
+	{Token.pos == VS}|
+	{Token.pos == VLadj}|
+	{Token.pos == VHadj}	
+)
+
+Rule: NounPhrase
+(
+	(
+		(DETERMINANT)+
+		{SpaceToken.kind == space}
+	)*
+	(
+		((ADJECTIVE)|(ADVERB)) 
+		{SpaceToken.kind == space}
+	)*
+	(
+		(
+			(NOUN)
+			{SpaceToken.kind == space}
+		)*
+		(NOUN)
+	):head
+	(
+		(DETERMINANT)
+		{SpaceToken.kind == space}
+	)*
+	(
+		{SpaceToken.kind == space}
+		(
+			(ADJECTIVE):adj|
+			(ADVERB)) 
+	)*
+):np -->
+:np.NounPhrase = {rule = "NounPhrase"},
+:adj.Adjective = {rule = "NounPhrase"},
+:head.Head = {rule = "NounPhrase"}
+
+
+Rule: ProperNounPhrase
+(
+	(
+		(DETERMINANT)+
+		{SpaceToken.kind == space}
+	)*
+	(
+		((ADJECTIVE)|(ADVERB)) 
+		{SpaceToken.kind == space}
+	)*
+	(
+		(
+			{SpaceToken.kind == space}
+			((PROPERNOUN)|(NOUN))
+		)*
+		(PROPERNOUN)
+		(
+			{SpaceToken.kind == space}
+			(PREPOSITION)
+		)*
+		(
+			{SpaceToken.kind == space}
+			((PROPERNOUN)|(NOUN))
+		)*
+	):head
+	(
+		(DETERMINANT)
+		{SpaceToken.kind == space}
+	)*
+	(
+		{SpaceToken.kind == space}
+		((ADJECTIVE):adj|(ADVERB))  
+	)*
+):np -->
+:np.ProperNounPhrase = {rule = "ProperNounPhrase"},
+:adj.Adjective = {rule = "ProperNounPhrase"},
+:head.Head = {rule = "ProperNounPhrase"},
+:head.ProperNoun = {rule = "ProperNounPhrase"}
+
+
+// Normal ProperNounPhrase
+
+Macro: PROPERNOUNPHRASE1
+(
+	{ProperNounPhrase}
+)
+
+
+// Punctuation + PNP
+
+Macro: PROPERNOUNPHRASE2
+(
+	(COMA)
+	{SpaceToken.kind == space}
+	(PROPERNOUNPHRASE1)
+)
+
+
+// Conjunction + PNP
+
+Macro: PROPERNOUNPHRASE3
+(
+	(COMA)?
+	{SpaceToken.kind == space}
+	(CONJUNCTION)
+	{SpaceToken.kind == space}
+	(PROPERNOUNPHRASE1)
+)
+
+Macro: PROPERNOUNPHRASE4
+(
+	(PROPERNOUNPHRASE1)
+	(
+		(COMA)
+		{SpaceToken.kind == space}
+		(PROPERNOUNPHRASE1)
+	)+
+)
+
+
+// PNP (PNP2)* + (PNP3)*
+Macro: PROPERNOUNPHRASESALTERNATIVES
+(
+	(PROPERNOUNPHRASE1)
+	(
+		(PROPERNOUNPHRASE2)|
+		(PROPERNOUNPHRASE3)
+	)*
+)
+
+
+
+// Normal NounPhrase
+
+Macro: NOUNPHRASE1
+(
+	{NounPhrase}
+)
+
+
+// Punctuation + NP
+
+Macro: NOUNPHRASE2
+(
+	(COMA)
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1)
+)
+
+
+// Conjunction + NP
+
+Macro: NOUNPHRASE3
+(
+	(COMA)?
+	{SpaceToken.kind == space}
+	(CONJUNCTION)
+	{SpaceToken.kind == space}
+	(NOUNPHRASE1)
+)
+
+Macro: NOUNPHRASE4
+(
+	(NOUNPHRASE1)
+	(
+		(COMA)
+		{SpaceToken.kind == space}
+		(NOUNPHRASE1)
+	)+
+)
+
+
+// NP (NP2)* + (NP3)*
+Macro: NOUNPHRASESALTERNATIVES
+(
+	(NOUNPHRASE1)
+	((NOUNPHRASE2)|(NOUNPHRASE3))*
+)
+
+Rule: PrepositionalPhrase
+(
+	(PREPOSITION)
+	(
+		{SpaceToken.kind == space}
+		(
+			(NOUNPHRASE1)|
+			(PROPERNOUNPHRASE1)
+		)
+	)
+):pp -->
+:pp.PrepositionalPhrase = {rule = "PrepositionalPhrase"})

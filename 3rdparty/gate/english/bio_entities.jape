@@ -1,0 +1,56 @@
+Phase: Bio_Entities
+Input: Token SpaceToken Concept
+Options: control = appelt
+
+rule: BioConcept1
+(
+	{Token.category == JJ}
+	{SpaceToken.kind == space}
+	( 
+		{Token.category == NN}
+	)*
+	{SpaceToken.kind == space}
+	({Token.string == cell}|{Token.string == neuron}|{Token.string == glia})
+):concept
+-->
+:concept.Concept = { rule = "BioConcept1" }
+
+rule: BioConcept2
+(
+	{Token.category == JJ}
+	{SpaceToken.kind == space}
+	( 
+		{Token.category == NN}
+	)*
+	{SpaceToken.kind == space}
+	({Token.category == NN}):noun
+):concept
+-->
+{
+	gate.AnnotationSet nouns = (gate.AnnotationSet)bindings.get( "noun" );
+ 	gate.AnnotationSet tokens = inputAS.get( nouns.firstNode().getOffset() ).get( "Token" );
+	List tokensList = new ArrayList( tokens );
+	Collections.sort( tokensList, new gate.util.OffsetComparator() );
+	Iterator tokensIter = tokensList.iterator();
+ 	gate.Annotation token = (gate.Annotation)tokensIter.next();
+ 	String sToken = (String)token.getFeatures().get( "string" );
+ 	if( sToken.endsWith( "cyte" ) || sToken.endsWith( "blast" )  || sToken.endsWith("phage") 
+ 		|| sToken.endsWith( "cytes" ) || sToken.endsWith( "phages" ) )
+ 	{
+ 		try {
+ 			gate.AnnotationSet concept = (gate.AnnotationSet)bindings.get( "concept" );
+ 			outputAS.add( concept.firstNode().getOffset(), concept.lastNode().getOffset(), "Concept", Factory.newFeatureMap() );
+ 			gate.AnnotationSet concepts = inputAS.get( concept.firstNode().getOffset() ).get( "Concept" );
+ 			((gate.Annotation)concepts.iterator().next()).getFeatures().put( "rule", "BioConcept2" );
+  		}
+  		catch( InvalidOffsetException e ){
+  			e.printStackTrace();
+  		}
+  	}
+}
+
+macro: BioConcept
+(
+	({BioConcept1}|{BioConcept2})
+)
+

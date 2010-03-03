@@ -1,0 +1,163 @@
+// Brian Mitchell, December 2003 -- January 2004
+// modified from:
+// Valentin Tablan, 29/06/2001
+// $id$
+
+
+Phase:GtLt_Retag
+Input: Token
+Options: control = appelt
+
+// to make it possible to find the extent of tags which contain
+// multiple symbols which may include puncutation
+// eg <a href="http:/some.url/dir/file">
+// we relabel the less than and greater than symbols so that their
+// Token.kind is no longer punctuation
+
+Rule: retag
+(({Token.string==">"}|{Token.string=="<"}):sym):original
+-->
+{
+  gate.AnnotationSet toRemove = (gate.AnnotationSet)bindings.get("original");
+  annotations.removeAll(toRemove);
+  //get the tokens
+  java.util.ArrayList tokens = new java.util.ArrayList(toRemove);
+  //define a comparator for annotations by start offset
+  Collections.sort(tokens, new gate.util.OffsetComparator());
+  String text = "";
+  Iterator tokIter = tokens.iterator();
+  while(tokIter.hasNext())
+    text += (String)((Annotation)tokIter.next()).getFeatures().get("string");
+
+  gate.AnnotationSet symbolSet = (gate.AnnotationSet)bindings.get("sym");
+  java.util.ArrayList symbols = new java.util.ArrayList(symbolSet);
+  Iterator symIter = symbols.iterator();
+  gate.Annotation symbol = (Annotation)symIter.next();
+  String oldkind = (String) symbol.getFeatures().get("kind");
+  String origstring = (String) symbol.getFeatures().get("string");
+
+  gate.FeatureMap features = Factory.newFeatureMap();
+  features.put("oldkind", oldkind);
+  if (origstring.equals(">")) {
+    features.put("kind", "GTsym");
+  } else {
+    features.put("kind", "LTsym");
+  }
+ features.put("string", text);
+  features.put("length", Integer.toString(text.length()));
+  annotations.add(toRemove.firstNode(), toRemove.lastNode(), "Token", features);
+}
+
+
+
+////////////////////////////////////////////////////////////
+
+
+
+Phase:Make_tags
+Input: Token SpaceToken
+Options: control = appelt
+
+//adjusts the tokeniser output
+
+
+Rule: starttag
+ (
+   {Token.kind=="LTsym"}
+   ({Token.kind=="word"}|{Token.kind=="number"})+
+   ({SpaceToken}|{Token.kind=="word"}|{Token.kind=="number"}|{Token.kind=="punctuation"}|{Token.kind=="symbol"})*
+   {Token.kind=="GTsym"}
+
+ ):original
+-->
+{
+  gate.AnnotationSet toRemove = (gate.AnnotationSet)bindings.get("original");
+  annotations.removeAll(toRemove);
+  //get the tokens
+  java.util.ArrayList tokens = new java.util.ArrayList(toRemove);
+  //define a comparator for annotations by start offset
+  Collections.sort(tokens, new gate.util.OffsetComparator());
+  String text = "";
+  Iterator tokIter = tokens.iterator();
+  while(tokIter.hasNext())
+    text += (String)((Annotation)tokIter.next()).getFeatures().get("string");
+
+  gate.FeatureMap features = Factory.newFeatureMap();
+  features.put("kind", "tag");
+  features.put("string", text);
+  features.put("length", Integer.toString(text.length()));
+  features.put("tagtype", "open");
+  annotations.add(toRemove.firstNode(), toRemove.lastNode(), "Token", features);
+}
+
+
+////////////////////
+Rule: endtag
+ (
+   {Token.kind=="LTsym"}
+   {Token.string=="/"}
+   (({Token.kind=="word"}|{Token.kind=="number"}))+
+   {Token.kind=="GTsym"}
+
+ ):original
+-->
+{
+  gate.AnnotationSet toRemove = (gate.AnnotationSet)bindings.get("original");
+  annotations.removeAll(toRemove);
+  //get the tokens
+  java.util.ArrayList tokens = new java.util.ArrayList(toRemove);
+  //define a comparator for annotations by start offset
+  Collections.sort(tokens, new gate.util.OffsetComparator());
+  String text = "";
+  Iterator tokIter = tokens.iterator();
+  while(tokIter.hasNext())
+    text += (String)((Annotation)tokIter.next()).getFeatures().get("string");
+
+  gate.FeatureMap features = Factory.newFeatureMap();
+  features.put("kind", "tag");
+  features.put("string", text);
+  features.put("length", Integer.toString(text.length()));
+  features.put("tagtype", "close");
+  annotations.add(toRemove.firstNode(), toRemove.lastNode(), "Token", features);
+}
+
+
+
+////////////////////////////////////////////////////////////
+
+
+
+Phase:Restore_GtLt
+Input: Token
+Options: control = appelt
+
+// any unused < and > symbols should be returned to their original state
+
+Rule: replacesym
+(({Token.string=="<"}|{Token.string==">"}):sym):original
+-->
+{
+  gate.AnnotationSet toRemove = (gate.AnnotationSet)bindings.get("original");
+  annotations.removeAll(toRemove);
+  //get the tokens
+  java.util.ArrayList tokens = new java.util.ArrayList(toRemove);
+  //define a comparator for annotations by start offset
+  Collections.sort(tokens, new gate.util.OffsetComparator());
+  String text = "";
+  Iterator tokIter = tokens.iterator();
+  while(tokIter.hasNext())
+    text += (String)((Annotation)tokIter.next()).getFeatures().get("string");
+
+  gate.AnnotationSet symbolSet = (gate.AnnotationSet)bindings.get("sym");
+  java.util.ArrayList symbols = new java.util.ArrayList(symbolSet);
+  Iterator symIter = symbols.iterator();
+  gate.Annotation symbol = (Annotation)symIter.next();
+  String oldkind = (String) symbol.getFeatures().get("oldkind");
+  //String origstring = (String) symbol.getFeatures().get("string");
+
+  gate.FeatureMap features = Factory.newFeatureMap();
+  features.put("kind", oldkind);
+ features.put("string", text);
+  features.put("length", Integer.toString(text.length()));
+  annotations.add(toRemove.firstNode(), toRemove.lastNode(), "Token", features);
+}

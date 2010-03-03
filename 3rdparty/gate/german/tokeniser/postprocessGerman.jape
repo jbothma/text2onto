@@ -1,0 +1,240 @@
+// Brian Mitchell, December 2003 -- January 2004
+// modified from:
+// Valentin Tablan, 29/06/2001
+// $id$
+
+
+Phase:German_reprocess
+Input: Token SpaceToken
+Options: control = appelt
+
+
+
+Rule: cardinal
+ (
+   {Token.kind=="number"}
+ ):token
+-->
+{
+  Annotation token = (Annotation)((AnnotationSet)bindings.get("token")).iterator().next();
+  token.getFeatures().put("numtype", "card");
+}
+
+
+
+////////////////////
+Rule: numberJoin
+ (
+  // 123.456
+  (
+   {Token.kind=="number"}
+   (({Token.string=="."}|{Token.string==","})
+   {Token.kind=="number"})+
+  )
+ ):original
+-->
+{
+  AnnotationSet toRemove = (AnnotationSet)bindings.get("original");
+  annotations.removeAll(toRemove);
+  //get the tokens
+  ArrayList tokens = new ArrayList(toRemove);
+  //define a comparator for annotations by start offset
+  Collections.sort(tokens, new OffsetComparator());
+  StringBuffer text = new StringBuffer();
+  Iterator tokIter = tokens.iterator();
+  while(tokIter.hasNext())
+    text.append( (String)((Annotation)tokIter.next()).getFeatures().get("string"));
+
+  FeatureMap features = Factory.newFeatureMap();
+  features.put("kind", "number");
+  features.put("string", text.toString());
+  features.put("length", Integer.toString(text.length()));
+  features.put("numtype", "punctuated");
+  annotations.add(toRemove.firstNode(), toRemove.lastNode(), "Token", features);
+}
+
+
+
+
+////////////////////
+Rule: ordinal
+ (
+  // 1.   2.   3.  etc
+  (
+   {Token.kind=="number"}
+   {Token.string=="."}
+  )
+ ):original
+-->
+{
+  AnnotationSet toRemove = (AnnotationSet)bindings.get("original");
+  annotations.removeAll(toRemove);
+
+  //get the tokens
+  ArrayList tokens = new ArrayList(toRemove);
+  //define a comparator for annotations by start offset
+  Collections.sort(tokens, new OffsetComparator());
+  StringBuffer text = new StringBuffer();
+  Iterator tokIter = tokens.iterator();
+  while(tokIter.hasNext())
+    text.append( (String)((Annotation)tokIter.next()).getFeatures().get("string") );
+
+  FeatureMap features = Factory.newFeatureMap();
+  features.put("kind", "number");
+  features.put("string", text.toString());
+  features.put("length", Integer.toString(text.length()));
+  features.put("numtype", "ord");
+  annotations.add(toRemove.firstNode(), toRemove.lastNode(), "Token", features);
+}
+
+
+
+/*
+  The normalise strings phase adds a "normstring" feature to every token.
+  This feature contains a lowercase copy of the contents of the string feature.
+  The normcase feature is used by some of the Named Entity grammars.  However,
+  you can comment this phase out if you need to save memory when processing large
+  documents.
+
+  The normaliise_strings phase is available as a separate grammar in the
+  creole/stringNormaliser directory.  You can create a separate processing module
+  that normalises strings by creating a new JAPE transducer that uses this separate
+  grammar file.
+ */
+Phase: normalise_strings
+Input: Token
+Options: control = appelt
+
+//adjusts the tokeniser output
+
+Rule: normalise
+    ({Token}):token
+-->
+{
+  Annotation token = (Annotation)((AnnotationSet)bindings.get("token")).iterator().next();
+  token.getFeatures().put("nstr", ((String)token.getFeatures().get("string")).toLowerCase() );
+}
+
+
+
+/*
+////////////////////////////////////////////////////////////
+// original rules from ANNIE follow
+
+Rule: simpleJoin
+ (
+  //'30s, ..., 'Cause, 'em, 'N, 'S, 's, 'T, 'd, , 'll, 'm, 're, 's, 'til, 've
+  (
+   {Token.string=="'"}
+   ({Token.string=="30s"}|{Token.string=="40s"}|{Token.string=="50s"}|{Token.string=="60s"}
+    |{Token.string=="70s"}|{Token.string=="80s"}|{Token.string=="90s"}|{Token.string=="Cause"}
+    |{Token.string=="cause"}|{Token.string=="Em"}|{Token.string=="em"}|{Token.string=="N"}
+    |{Token.string=="S"}|{Token.string=="s"}|{Token.string=="T"}|{Token.string=="d"}
+    |{Token.string=="ll"}|{Token.string=="m"}|{Token.string=="re"}|{Token.string=="s"}
+    |{Token.string=="til"}|{Token.string=="ve"})
+  )
+  |
+  //'n'
+  ({Token.string=="'"} {Token.string=="n"} {Token.string=="'"})
+  |
+  //C'mon
+  (({Token.string=="C"}|{Token.string=="c"}){Token.string=="'"} {Token.string=="mon"})
+  |
+  //o'clock
+  (({Token.string=="O"}|{Token.string=="o"}){Token.string=="'"} {Token.string=="clock"})
+  |
+  //ma'am
+  (({Token.string=="ma"}|{Token.string=="Ma"}){Token.string=="'"} {Token.string=="am"})
+
+ ):left
+-->
+{
+  AnnotationSet toRemove = (AnnotationSet)bindings.get("left");
+  annotations.removeAll(toRemove);
+  //get the tokens
+  ArrayList tokens = new ArrayList(toRemove);
+  //define a comparator for annotations by start offset
+  Collections.sort(tokens, new OffsetComparator());
+  String text = "";
+  Iterator tokIter = tokens.iterator();
+  while(tokIter.hasNext())
+    text += (String)((Annotation)tokIter.next()).getFeatures().get("string");
+
+  FeatureMap features = Factory.newFeatureMap();
+  features.put("kind", "word");
+  features.put("string", text);
+  features.put("length", Integer.toString(text.length()));
+  features.put("orth", "apostrophe");
+  annotations.add(toRemove.firstNode(), toRemove.lastNode(), "Token", features);
+}
+
+//?n't
+Rule: VBneg
+   ({Token}):one
+   ({Token.string=="'"}{Token.string=="t"}):two
+-->
+{
+  Annotation firstToken = (Annotation)
+                               ((AnnotationSet)bindings.get("one")).iterator().next();
+  String firstTokenText = (String)firstToken.getFeatures().get("string");
+  if(firstTokenText.endsWith("n")){
+    //remove the old tokens
+    annotations.removeAll((AnnotationSet)bindings.get("one"));
+    annotations.removeAll((AnnotationSet)bindings.get("two"));
+    //create the new tokens
+    Long ofs0 = firstToken.getStartNode().getOffset();
+    Long ofs1 = new Long(firstToken.getEndNode().getOffset().longValue() - 1);
+    Long ofs2 = ((AnnotationSet)bindings.get("two")).lastNode().getOffset();
+    try{
+      FeatureMap features;
+      if(!ofs0.equals(ofs1)){
+        features = Factory.newFeatureMap();
+        features.put("kind", "word");
+        String text = firstTokenText.substring(0, firstTokenText.length() - 1);
+        features.put("string", text);
+        features.put("length", Integer.toString(text.length()));
+        features.put("orth", firstToken.getFeatures().get("orth"));
+        annotations.add(ofs0, ofs1, "Token", features);
+      }
+
+      features = Factory.newFeatureMap();
+      features.put("kind", "word");
+      features.put("string", "n't");
+      features.put("length", "3");
+      features.put("orth", "lowercase");
+      annotations.add(ofs1, ofs2, "Token", features);
+    }catch(Exception e){
+      e.printStackTrace();
+    }
+  }//if first token ends with "n"
+}
+
+*/
+/*
+// CR+LF | CR |LF+CR -> One single SpaceToken
+Rule: NewLine
+ (
+  ({SpaceToken.string=="\n"}) |
+  ({SpaceToken.string=="\r"}) |
+  ({SpaceToken.string=="\n"}{SpaceToken.string=="\r"}) |
+  ({SpaceToken.string=="\r"}{SpaceToken.string=="\n"})
+  ):left
+-->
+{
+  AnnotationSet toRemove = (AnnotationSet)bindings.get("left");
+  annotations.removeAll(toRemove);
+  //get the tokens
+  ArrayList tokens = new ArrayList(toRemove);
+  //define a comparator for annotations by start offset
+  Collections.sort(tokens, new OffsetComparator());
+  String text = "";
+  Iterator tokIter = tokens.iterator();
+  while(tokIter.hasNext())
+    text += (String)((Annotation)tokIter.next()).getFeatures().get("string");
+
+  FeatureMap features = Factory.newFeatureMap();
+  features.put("kind", "control");
+  features.put("string", text);
+  features.put("length", Integer.toString(text.length()));
+  annotations.add(toRemove.firstNode(), toRemove.lastNode(), "SpaceToken", features);
+}*/

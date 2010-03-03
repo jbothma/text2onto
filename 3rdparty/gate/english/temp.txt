@@ -1,0 +1,31 @@
+
+rule: InstanceOfRelation7
+(
+	({Token.string=="the"}|{Token.string=="The"})
+	{SpaceToken.kind == space}
+	(
+		({Token.category == JJ}|{Token.category == VBG})
+		{SpaceToken.kind == space}
+	)*
+	({ProperNounPhrase.type == Head}):instance
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation7" },
+:instance.Domain = { rule = "InstanceOfRelation7" },
+:concept.Range = { rule = "InstanceOfRelation7" }
+
+rule: InstanceOfRelation9
+(
+	(ProperNounPhrase1):instance
+	{Token.kind == punctuation}
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept
+	{Token.kind == punctuation}
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation9" },
+:instance.Domain = { rule = "InstanceOfRelation9" },
+:concept.Range = { rule = "InstanceOfRelation9" }
+

@@ -1,0 +1,68 @@
+Phase: Linguistic2
+Options: control = appelt
+
+Rule: NounPhrase2
+(
+	{NounPhrase}
+	(
+		{SpaceToken.kind == space}
+		(
+			(PREPOSITION)
+			{SpaceToken.kind == space}
+			({NounPhrase}|{ProperNounPhrase})
+		):pp
+	)+
+):np -->
+:np.NounPhrase = {rule = "NounPhrase2"},
+:pp.PrepositionalPhrase = {rule = "NounPhrase2"}
+
+Rule: ProperNounPhrase2
+(
+	{ProperNounPhrase}
+	(
+		{SpaceToken.kind == space}
+		(
+			(PREPOSITION)
+			{SpaceToken.kind == space}
+			({NounPhrase}|{ProperNounPhrase})
+		):pp
+	)+
+):np -->
+:np.ProperNounPhrase = {rule = "ProperNounPhrase2"},
+:pp.PrepositionalPhrase = {rule = "ProperNounPhrase2"}
+
+Rule: SubordinatePhrase
+(
+	(	
+		(DETERMINANT)
+		{SpaceToken.kind == space}
+	)*
+	(
+		(SUBORDINATECONECTOR)
+		{SpaceToken.kind == space}
+	)+
+	(
+		(
+			{NounPhrase}|
+			{PrepositionalPhrase}|
+			{NounPhrase}|
+			(ADVERB)			
+		)
+		{SpaceToken.kind == space}
+	)*:subject
+	(
+		({Verb})
+		(
+			{SpaceToken.kind == space}
+			(
+				{NounPhrase}|
+				{PrepositionalPhrase}|
+				{NounPhrase}|
+				(ADVERB)			
+			)
+		)*
+	):object
+):sp -->
+:sp.SubordinatePhrase = {rule = "SubordinatePhrase"},
+:subject.Subject = {rule = "SubordinatePhrase"},
+:object.Object = {rule = "SubordinatePhrase"}

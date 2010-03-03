@@ -1,0 +1,172 @@
+Phase: Linguistic_Ger_2
+Input: Head NounPhrase ProperNounPhrase SpaceToken Token
+Options: control = appelt
+
+
+Macro: ProperNounPhrase1
+(
+	{ProperNounPhrase}
+)
+
+Macro: ProperNounPhrase2
+(
+	(
+		{Token.pos== KON}
+		({SpaceToken.kind == space})
+		(ProperNounPhrase1)
+	)+
+)
+
+Macro: ProperNounPhrase4
+(
+	(ProperNounPhrase1)
+	(
+	{Token.kind == punctuation}
+	{SpaceToken.kind == space}
+	(ProperNounPhrase1)
+	)*
+)
+
+Macro: ProperNounPhrasesAlternatives
+(
+	(ProperNounPhrase4)
+	(
+		{SpaceToken.kind == space}
+		(ProperNounPhrase2)
+	)*
+)
+
+Macro: NounPhrase1
+(
+	{NounPhrase}
+)
+
+Macro: NounPhrase2
+(
+	(
+		{Token.pos== KON}
+		({SpaceToken.kind == space})
+		(NounPhrase1)
+	)+
+)
+
+Macro: NounPhrase4
+(
+	(NounPhrase1)
+	(
+	{Token.kind == punctuation}
+	{SpaceToken.kind == space}
+	(NounPhrase1)
+	)*
+)
+
+Macro: NounPhrasesAlternatives
+(
+	(NounPhrase4)
+	(
+		{SpaceToken.kind == space}
+		(NounPhrase2)
+	)*
+)
+
+Rule: NounPhraseRemove
+(
+	{NounPhrase}
+):np -->
+{
+	//for each Linguistic annotation, which matches the whole noun phrase
+	gate.AnnotationSet np = (gate.AnnotationSet)bindings.get( "np" );
+	gate.AnnotationSet np_head = inputAS.get( "Head", np.firstNode().getOffset(), np.lastNode().getOffset() );
+	if(np_head == null) {
+	return;
+	}
+//	System.out.println("np_head "+ np_head.toString());
+ 	gate.AnnotationSet tokens = inputAS.get( "Token", np.firstNode().getOffset(), np.lastNode().getOffset() );
+	//Sort the annotations
+	List tokensList = new ArrayList(tokens);
+	Collections.sort(tokensList, new gate.util.OffsetComparator());
+	System.out.println("tokens "+ tokensList.toString());
+ 	
+	//compare the first token with the following strings
+	Iterator tokensIter = tokensList.iterator();
+ 	gate.Annotation token = (gate.Annotation)tokensIter.next();
+ 	List lNames = new ArrayList();
+ 	boolean delete = false;
+	boolean goOn = false;
+	
+	//in linguistischen Annotationen enthaltene ART
+	lNames.add("ein");
+ 	lNames.add("und");
+ 	lNames.add("oder");
+
+	for( int i = 0; i < lNames.size(); i++ )
+ 	{
+		String sName = (String)lNames.get(i);
+ 		if(token.getFeatures().get("string").equals(sName)) 
+		{
+			if(tokensIter.hasNext() == true ){
+			token = (gate.Annotation)tokensIter.next();
+			}
+			goOn = true;
+			break;
+		} else {
+			goOn = true;
+		}
+ 	}
+ 	
+	if(goOn){
+		//in linguistischen Annotationen enthaltene ADJA
+		lNames.add("besonders");
+		lNames.add("Besonders");
+		lNames.add("solche");
+		lNames.add("beinhaltend");
+		lNames.add("andere");
+		lNames.add("anderes");
+		lNames.add("anderer");
+		lNames.add("weitere");
+		lNames.add("weiteres");
+		lNames.add("weiterer");
+		
+		//in linguistischen Annotationen enthaltene NN
+		lNames.add("Beispiel");
+		lNames.add("Teil");
+		lNames.add("Teile");
+		 
+		for( int i = 0; i < lNames.size(); i++ )
+		{
+			String sName = (String)lNames.get(i);
+			if(token.getFeatures().get("string").equals(sName)) 
+			{
+				delete = true;
+				break;
+			} 
+		}
+	}
+	
+ 	if( delete )
+ 	{
+	Long lStart = (Long)token.getEndNode().getOffset();
+ 	Long start = new Long(lStart.longValue() + 1);
+ 	System.out.println(
+		"delete lStart " + lStart 
+		+ " np_head.firstNode().getOffset() " + np_head.firstNode().getOffset()
+		+ " np_head.lastNode().getOffset() " + np_head.lastNode().getOffset()
+		+ " np.firstNode().getOffset() " + np.firstNode().getOffset()
+		+ " np.lastNode().getOffset() " + np.lastNode().getOffset()
+		+"  np_head "+ np_head.toString()
+	);
+	try
+ 		{
+		outputAS.add(start, np_head.lastNode().getOffset(), "Head", ((gate.Annotation)np_head.iterator().next()).getFeatures());
+		outputAS.add(start, np.lastNode().getOffset(), "NounPhrase", ((gate.Annotation)np.iterator().next()).getFeatures());
+		inputAS.remove((gate.Annotation)((gate.AnnotationSet)np_head.get("Head")).iterator().next());
+		inputAS.remove((gate.Annotation)np.iterator().next());
+			System.out.println("content: " + outputAS.toString());
+			System.out.println("inputContent: " + inputAS.toString());
+		
+ 		} catch ( InvalidOffsetException e1 ) {
+		e1.printStackTrace();
+		}
+	}	
+}
+

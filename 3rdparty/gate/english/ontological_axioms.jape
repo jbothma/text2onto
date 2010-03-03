@@ -1,0 +1,11 @@
+Phase: Ontological_Axioms
+Input: NounPhrase ProperNounPhrase SpaceToken Token
+Options: control = brill	
+
+rule: Disjoint1
+( 
+	(NounPhrasesAlternatives)
+):disjoint
+-->
+:disjoint.DisjointClasses = { rule = "Disjoint1" } 
+

@@ -1,0 +1,299 @@
+Phase: Ontological_Relations
+Input: NounPhrase ProperNounPhrase SpaceToken Token
+Options: control = brill	
+
+rule: SubclassOfRelation1
+(
+	(NounPhrase1):superconcept
+	({Token.kind == punctuation})?
+	{SpaceToken.kind == space}
+	{Token.string=="such"}
+	{SpaceToken.kind == space}
+	{Token.string=="as"}
+	{SpaceToken.kind == space}
+	(NounPhrasesAlternatives):subconcept
+):subclassOf
+-->
+:subclassOf.SubclassOfRelation = { rule = "SubclassOfRelation1" },
+:subconcept.Domain = { rule = "SubclassOfRelation1" },
+:superconcept.Range = { rule = "SubclassOfRelation1" }
+
+
+rule: SubclassOfRelation2
+(
+	(NounPhrase4):subconcept
+	{SpaceToken.kind == space}
+	({Token.string=="or"}|{Token.string=="and"})
+	{SpaceToken.kind == space}
+	{Token.string=="other"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):superconcept
+):subclassOf
+-->
+:subclassOf.SubclassOfRelation = { rule = "SubclassOfRelation2" },
+:subconcept.Domain = { rule = "SubclassOfRelation2" },
+:superconcept.Range = { rule = "SubclassOfRelation2" }
+
+
+rule: SubclassOfRelation3
+(
+	(NounPhrase1):superconcept
+	({Token.kind == punctuation})?
+	{SpaceToken.kind == space}
+	({Token.string=="especially"}|{Token.string=="including"})
+	{SpaceToken.kind == space}
+	(NounPhrasesAlternatives):subconcept
+):subclassOf
+-->
+:subclassOf.SubclassOfRelation = { rule = "SubclassOfRelation3" },
+:subconcept.Domain = { rule = "SubclassOfRelation3" },
+:superconcept.Range = { rule = "SubclassOfRelation3" }
+
+rule: SubclassOfRelation4
+(
+	({Token.string=="Such"}|{Token.string=="such"})
+	{SpaceToken.kind == space}
+	(NounPhrase1):superconcept
+	{SpaceToken.kind == space}
+	{Token.string=="as"}
+	{SpaceToken.kind == space}
+	(NounPhrasesAlternatives):subconcept
+):subclassOf
+-->
+:subclassOf.SubclassOfRelation = { rule = "SubclassOfRelation4" },
+:subconcept.Domain = { rule = "SubclassOfRelation4" },
+:superconcept.Range = { rule = "SubclassOfRelation4" }
+
+rule: SubclassOfRelation5
+(
+	(NounPhrase1):subconcept
+	{SpaceToken.kind == space}
+	{Token.string=="is"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):superconcept
+	//(NounPhrasesAlternatives):superconcept
+):subclassOf
+-->
+:subclassOf.SubclassOfRelation = { rule = "SubclassOfRelation5" },
+:subconcept.Domain = { rule = "SubclassOfRelation5" },
+:superconcept.Range = { rule = "SubclassOfRelation5" }
+
+rule: SubclassOfRelation6
+(
+	(NounPhrase1):subconcept
+	{Token.kind==punctuation}
+	{SpaceToken.kind == space}
+	{Token.string=="another"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):superconcept
+):subclassOf
+-->
+:subclassOf.SubclassOfRelation = { rule = "SubclassOfRelation6" },
+:subconcept.Domain = { rule = "SubclassOfRelation6" },
+:superconcept.Range= { rule = "SubclassOfRelation6" }
+
+rule: SubclassOfRelation7
+(
+	(NounPhrase1):concept1
+	{SpaceToken.kind == space}
+	{Token.string=="like"}
+	{SpaceToken.kind == space}
+	(NounPhrasesAlternatives):concept2
+):subclassOf
+-->
+:subclassOf.SubclassOfRelation = { rule = "SubclassOfRelation7" },
+:concept1.Domain = { rule = "SubclassOfRelation7" },
+:concept2.Range = { rule = "SubclassOfRelation7" }
+
+
+rule: InstanceOfRelation1
+(
+	(NounPhrase1):concept
+	({SpaceToken.kind == space})
+	({Token.string=="such"})
+	({SpaceToken.kind == space})
+	({Token.string=="as"})
+	({SpaceToken.kind == space})
+	(ProperNounPhrasesAlternatives):instance
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation1" },
+:instance.Domain = { rule = "InstanceOfRelation1" },
+:concept.Range = {  rule = "InstanceOfRelation1" }
+
+rule: InstanceOfRelation2
+(
+	(ProperNounPhrase4):instance
+	{SpaceToken.kind == space}
+	({Token.string=="or"}|{Token.string=="and"})
+	(
+		{SpaceToken.kind == space}
+		({Token.string=="all"}|{Token.string=="every"})
+	)?
+	{SpaceToken.kind == space}
+	{Token.string=="other"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation2" },
+:instance.Domain = { rule = "InstanceOfRelation2" },
+:concept.Range = { rule = "InstanceOfRelation2" }
+
+rule: InstanceOfRelation3
+(
+	(NounPhrase1):concept
+	({Token.kind == punctuation})?
+	{SpaceToken.kind == space}
+	({Token.string=="especially"}|{Token.string=="including"})
+	{SpaceToken.kind == space}
+	(ProperNounPhrasesAlternatives):instance
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation3" },
+:instance.Domain = { rule = "InstanceOfRelation3" },
+:concept.Range = { rule = "InstanceOfRelation3" }
+
+rule: InstanceOfRelation4
+(
+	({Token.string=="such"}| {Token.string=="Such"})
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept
+	{SpaceToken.kind == space}
+	{Token.string=="as"}
+	{SpaceToken.kind == space}
+	(ProperNounPhrasesAlternatives):instance
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation4" },
+:instance.Domain = { rule = "InstanceOfRelation4" },
+:concept.Range = { rule = "InstanceOfRelation4" }
+
+rule: InstanceOfRelation5
+(
+	(ProperNounPhrase1):instance
+	{Token.kind == punctuation}
+	{SpaceToken.kind == space}
+	{Token.string=="another"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation5" },
+:instance.Domain = { rule = "InstanceOfRelation5" },
+:concept.Range = { rule = "InstanceOfRelation5" }
+
+rule: InstanceOfRelation6
+(
+	(ProperNounPhrase1):instance
+	{SpaceToken.kind == space}
+	{Token.string=="is"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation6" },
+:instance.Domain = { rule = "InstanceOfRelation6" },
+:concept.Range = { rule = "InstanceOfRelation6" }
+
+rule: InstanceOfRelation8
+(
+	({Token.string=="the"}|{Token.string=="The"})
+	{SpaceToken.kind == space}
+	(
+		({Token.category == JJ}|{Token.category == VBG})
+		{SpaceToken.kind == space}
+	)*
+	({NounPhrase.type == Head}):concept
+	{SpaceToken.kind == space}
+	(ProperNounPhrase1):instance
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation8" },
+:instance.Domain = { rule = "InstanceOfRelation8" },
+:concept.Range = { rule = "InstanceOfRelation8" }
+
+rule: InstanceOfRelation10
+(
+	(ProperNounPhrase1):instance
+	{SpaceToken.kind == space}
+	{Token.string=="("}
+	({SpaceToken.kind == space})?
+	(NounPhrase1):concept
+	({SpaceToken.kind == space})?
+	{Token.string==")"}
+):instanceOf
+-->
+:instanceOf.InstanceOfRelation = { rule = "InstanceOfRelation10" },
+:instance.Domain = { rule = "InstanceOfRelation10" },
+:concept.Range = { rule = "InstanceOfRelation10" }
+
+rule: PartOfRelation1
+(
+	(NounPhrase1):concept1
+	{Token.string=="'s"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept2
+):partOf
+-->
+:partOf.PartOfRelation = { rule = "PartOfRelation1" },
+:concept1.Range = { rule = "PartOfRelation1" },
+:concept2.Domain = { rule = "PartOfRelation1" }
+
+rule: PartOfRelation2
+(
+	(NounPhrase1):concept1
+	{SpaceToken.kind == space}
+	({Token.string=="of"}|{Token.string=="in"})
+	{SpaceToken.kind == space}
+	(NounPhrasesAlternatives):concept2
+):partOf
+-->
+:partOf.PartOfRelation = { rule = "PartOfRelation2" },
+:concept1.Domain = { rule = "PartOfRelation2" },
+:concept2.Range = { rule = "PartOfRelation2" }
+
+rule: PartOfRelation3
+(
+	(NounPhrasesAlternatives):concept1
+	{SpaceToken.kind == space}
+	{Token.string=="are"}
+	{SpaceToken.kind == space}
+	{Token.string=="part"}
+	{SpaceToken.kind == space}
+	{Token.string=="of"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept2
+):partOf
+-->
+:partOf.PartOfRelation = { rule = "PartOfRelation3" },
+:concept1.Domain = { rule = "PartOfRelation3" },
+:concept2.Range = { rule = "PartOfRelation3" }
+
+rule: PartOfRelation4
+(
+	(NounPhrase1):concept1
+	{SpaceToken.kind == space}
+	{Token.string=="contains"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept2
+):partOf
+-->
+:partOf.PartOfRelation = { rule = "PartOfRelation4" },
+:concept2.Domain = { rule = "PartOfRelation4" },
+:concept1.Range = { rule = "PartOfRelation4" }
+
+rule: PartOfRelation5
+(
+	(NounPhrase1):concept1
+	{SpaceToken.kind == space}
+	{Token.string=="consists"}
+	{SpaceToken.kind == space}
+	{Token.string=="of"}
+	{SpaceToken.kind == space}
+	(NounPhrase1):concept2
+):partOf
+-->
+:partOf.PartOfRelation = { rule = "PartOfRelation5" },
+:concept1.Range = { rule = "PartOfRelation5" },
+:concept2.Domain = { rule = "PartOfRelation5" }

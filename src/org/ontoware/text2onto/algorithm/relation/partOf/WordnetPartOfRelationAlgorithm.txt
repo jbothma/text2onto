@@ -1,0 +1,27 @@
+package org.ontoware.text2onto.algorithm.relation.partOf;
+
+import java.util.List;
+
+import net.didion.jwnl.data.Synset;
+import net.didion.jwnl.data.list.PointerTargetTree;
+
+import org.ontoware.text2onto.pom.POMRelation;
+import org.ontoware.text2onto.pom.POMSimilarityRelation;
+import org.ontoware.text2onto.pom.POMSubclassOfRelation;
+import org.ontoware.text2onto.algorithm.relation.AbstractWordnetRelationExtraction;
+
+
+public class WordnetPartOfRelationAlgorithm extends AbstractWordnetRelationExtraction implements AbstractPartOfRelationExtraction {
+
+	public PointerTargetTree getPointerTargetTree( Synset synset ){ 
+		return null;
+	}
+	
+	public POMRelation getPOMRelation( String sDomain, String sRange, double dProb ){ 
+		return null;
+	}
+	
+	public List getPOMRelations( POMSimilarityRelation relation ) {
+		return m_pomInterface.getObjects( POMSubclassOfRelation.class, relation.getDomain(), relation.getRange() );
+	}
+}

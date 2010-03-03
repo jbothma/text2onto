@@ -1,0 +1,43 @@
+Phase: Linguistic3
+//Input: NounPhrase ProperNounPhrase PrepositionalPhrase SubordinatePhrase SpaceToken Token 
+Options: control = appelt
+
+Rule: TransitiveVerbPhrase
+(
+	(
+		(
+			{NounPhrase}|
+			{ProperNounPhrase}
+		)
+		{SpaceToken.kind == space}
+	)*:subject
+	(
+		(PREVERB):preverb
+		{SpaceToken.kind == space}
+	)?
+	(
+		(VERB):verb			
+	)
+	(
+		{SpaceToken.kind == space}
+		(VERB2):verb2			
+	)* 
+	(
+		(
+			{SpaceToken.kind == space}
+			(
+				{PrepositionalPhrase}|
+				{NounPhrase}|
+				{ProperNounPhrase}|
+				(ADVERB)
+			)
+		)*
+	):object 
+):transitive -->
+:preverb.Verb = { rule = "TransitiveVerbPhrase" },
+:verb.Verb = { rule = "TransitiveVerbPhrase" },
+:verb2.Verb =  { rule = "TransitiveVerbPhrase" },
+:transitive.ContextTransitiveVerbPhrase = { rule = "TransitiveVerbPhrase" },
+:subject.Subject = { rule = "TransitiveVerbPhrase" },
+:object.Object = { rule = "TransitiveVerbPhrase" }
+

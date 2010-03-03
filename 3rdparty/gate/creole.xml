@@ -1,0 +1,23 @@
+<CREOLE-DIRECTORY>
+	<CREOLE>
+		<RESOURCE>
+			<NAME>StopwordDetection</NAME>
+			<JAR>StopwordDetection.jar</JAR>
+			<CLASS>org.ontoware.text2onto.linguistic.StopwordDetection</CLASS>
+			<PARAMETER NAME="stopwordsURL" RUNTIME="false">java.net.URL</PARAMETER>
+			<PARAMETER NAME="testUpperCase" RUNTIME="false">java.lang.Boolean</PARAMETER>
+		</RESOURCE>
+		<RESOURCE>
+			<NAME>TreeTagger</NAME>
+			<JAR>TreeTagger.jar</JAR>
+			<CLASS>org.ontoware.text2onto.linguistic.TreeTagger</CLASS>
+			<PARAMETER NAME="taggerScript" RUNTIME="false">java.lang.String</PARAMETER>  
+		</RESOURCE>
+		 <RESOURCE>
+			<NAME>Lemmatizer</NAME>
+			<JAR>Lemmatizer.jar</JAR>
+			<CLASS>org.ontoware.text2onto.linguistic.Lemmatizer</CLASS>
+			<PARAMETER NAME="lemmatizerScript" RUNTIME="false">java.lang.String</PARAMETER>  
+		</RESOURCE>
+	</CREOLE>
+</CREOLE-DIRECTORY>

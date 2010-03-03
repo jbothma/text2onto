@@ -1,0 +1,65 @@
+package org.ontoware.text2onto.algorithm.relation.partOf;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.ontoware.text2onto.corpus.AbstractDocument;
+import org.ontoware.text2onto.linguistic.AnalyserException;
+import org.ontoware.text2onto.linguistic.LinguisticAnalyser;
+import org.ontoware.text2onto.pom.POMConcept; 
+import org.ontoware.text2onto.pom.POMRelation;
+import org.ontoware.text2onto.pom.POMAbstractRelation;
+import org.ontoware.text2onto.evidence.DocumentReference;
+import org.ontoware.text2onto.evidence.PatternFingerprint;
+import org.ontoware.text2onto.algorithm.relation.AbstractPatternRelationExtraction; 
+ 
+/*
+ * @author Simon Sparn (sparn@ontoprise.de)
+ */
+public class PatternPartOfRelationExtraction extends AbstractPatternRelationExtraction implements AbstractPartOfRelationExtraction {
+  
+	protected ArrayList getDomainRelations( POMRelation relation ) {
+		ArrayList alDomainRelations = new ArrayList();
+		PatternFingerprint fingerprint = ( m_patternStore.getFingerprint( relation.getDomain() ) );
+		HashMap hmLabel2RelationRanges = (HashMap)fingerprint.getRelationRange();
+		ArrayList alRangeConcepts = (ArrayList)hmLabel2RelationRanges.get( relation.getLabel() );
+		for ( int i = 0; i < alRangeConcepts.size(); i++ )
+		{
+			POMConcept range = (POMConcept)alRangeConcepts.get( i );
+			POMRelation conceptualRelation = new POMRelation();
+			conceptualRelation.setDomain( (POMConcept)relation.getDomain() );
+			conceptualRelation.setRange( range );
+			conceptualRelation.setLabel( relation.getLabel() );
+			alDomainRelations.add( conceptualRelation );
+		}
+		return alDomainRelations;
+	}
+
+	protected List getRelationPointers( AbstractDocument doc ) {
+		return m_analyser.getDocumentReferences( doc, LinguisticAnalyser.PART_OF_RELATION );
+	}
+
+	protected List getRelations( DocumentReference dpRelation ) throws AnalyserException {
+		ArrayList alRelations = new ArrayList();
+		List alDomainStrings = getDomainStrings( dpRelation );
+		List alRangeStrings = getRangeStrings( dpRelation );
+		for ( int j = 0; j < alDomainStrings.size(); j++ )
+		{
+			POMConcept domainConcept = new POMConcept( (String)alDomainStrings.get( j ) );
+			for ( int k = 0; k < alRangeStrings.size(); k++ )
+			{
+				POMRelation conceptualRelation = new POMRelation();
+				conceptualRelation.setRange( new POMConcept( (String)alRangeStrings.get( k ) ) );
+				conceptualRelation.setDomain( domainConcept );
+				conceptualRelation.setLabel( LinguisticAnalyser.PART_OF_RELATION );
+				alRelations.add( conceptualRelation );
+			}
+		}
+		return alRelations;
+	}
+	
+	protected Double getProbability( int iFreq, int iAllFreq ) { 
+		return new Double( (double)iFreq / (double)iAllFreq );
+	}
+}

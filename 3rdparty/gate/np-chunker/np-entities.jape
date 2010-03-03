@@ -1,0 +1,62 @@
+//
+// $Id: np-entities.jape,v 1.1 2006-03-24 12:08:28 jvo Exp $
+//
+// Multilingual Noun Phrase Extractor (MuNPEx) -- Named Entities
+//
+// (c) 2005--2006 Rene Witte (http://rene-witte.net)
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+
+
+Phase: NP_Entities
+Input: Person Unknown Organization Location Number Address AbbrNAcro Money Percent Date DATE LOC NMB ORG PER PROF TIME PRC Organism
+Options: control = appelt
+
+Macro: ANNIE_ENTITIES
+// entities that come with the default ANNIE application
+// the same entities also appear with the French plugin for GATE3
+(
+	{Person}|
+	{Unknown}|
+	{Organization}|
+	{Location}|
+	{Address}|
+	{Money}|
+	{Percent}|
+	{Date}
+)
+
+Macro: GERMAN_ENTITIES
+// these are the entites that come with the GATE plugin for German
+(
+	{DATE}|
+	{LOC}|
+	{NMB}|
+	{ORG}|
+	{PER}|
+	{PROF}|
+	{TIME}|
+	{PRC}
+)
+
+Macro: BIO_ENTITIES
+// biological entities
+(
+	{Organism}
+)
+
+Rule: head
+Priority: 90
+(
+	ANNIE_ENTITIES|
+	GERMAN_ENTITIES|
+	BIO_ENTITIES|
+	{Number}|
+	{AbbrNAcro}
+):head
+-->
+	:head.tempNP = {kind = "HEAD"}

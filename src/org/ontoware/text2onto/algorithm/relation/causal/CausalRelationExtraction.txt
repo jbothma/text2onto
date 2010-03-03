@@ -1,0 +1,13 @@
+package org.ontoware.text2onto.algorithm.relation.causal;
+
+import java.util.List;
+
+import org.ontoware.text2onto.algorithm.AbstractAlgorithm;
+ 
+ 
+public class CausalRelationExtraction extends AbstractAlgorithm implements AbstractCausalRelationExtraction { 
+
+	public List execute() throws Exception {
+		return null;
+	}
+}

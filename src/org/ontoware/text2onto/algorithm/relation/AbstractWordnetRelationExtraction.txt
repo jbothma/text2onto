@@ -1,0 +1,362 @@
+package org.ontoware.text2onto.algorithm.relation;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import net.didion.jwnl.JWNLException;
+import net.didion.jwnl.data.Synset;
+import net.didion.jwnl.data.list.PointerTargetTree;
+
+import org.ontoware.text2onto.algorithm.AbstractAlgorithm; 
+import org.ontoware.text2onto.change.Change;
+import org.ontoware.text2onto.corpus.AbstractDocument;
+import org.ontoware.text2onto.corpus.Corpus;
+import org.ontoware.text2onto.corpus.CorpusException;
+import org.ontoware.text2onto.corpus.CorpusFactory;
+import org.ontoware.text2onto.corpus.DocumentFactory;
+import org.ontoware.text2onto.linguistic.AnalyserException;
+import org.ontoware.text2onto.pom.POMConcept;
+import org.ontoware.text2onto.pom.POMEntity;
+import org.ontoware.text2onto.pom.POMRelation;
+import org.ontoware.text2onto.evidence.ContextVector;
+import org.ontoware.text2onto.evidence.ContextVectorStore;
+import org.ontoware.text2onto.evidence.DocumentReference;
+import org.ontoware.text2onto.evidence.PatternStore;
+import org.ontoware.text2onto.evidence.EvidenceManager;
+import org.ontoware.text2onto.util.Settings;
+import org.ontoware.text2onto.wordnet.*;
+
+/**
+ * @author simon
+ *
+ */
+public abstract class AbstractWordnetRelationExtraction extends AbstractAlgorithm implements AbstractRelationExtraction {
+
+	private String m_sWordnetTempCorpus;
+
+	private double m_dTreshold = 0.7;
+
+	private HashMap m_hmSynset2Doc = new HashMap();
+
+	private HashMap m_hmNoun2WordnetSynsetList = new HashMap();
+
+	private HashMap m_hmDomainWNSyns2NodelistWNSyns = new HashMap();
+
+	private HashMap m_hmPOMRelationDom2Range = new HashMap();
+
+	private List m_lPomChanges;
+
+	private List m_lWordnetContextStoreChanges;
+
+	private Corpus m_tempCorpus;
+
+	private Wordnetapi m_wordnet = new Wordnetapi();
+
+	protected PatternStore m_patternStore;
+	
+	protected ContextVectorStore m_contextVectorStore;
+	
+
+	protected void setEvidenceManager( EvidenceManager refManager ) {
+		super.setEvidenceManager( refManager );
+		m_patternStore = (PatternStore)m_evidenceManager.getLocalStore( this, PatternStore.class.getName() );
+		m_contextVectorStore = (ContextVectorStore)m_evidenceManager.getLocalStore( this, ContextVectorStore.class.getName() );
+	}
+
+	private void addToTempCorpus( WordnetSynset wnsynset ) {
+		AbstractDocument doc = null;
+		try {
+			doc = DocumentFactory.newDocument( wnsynset.getSynset().toString() );
+		} 
+		catch ( CorpusException e ){
+			e.printStackTrace();
+		}
+		m_tempCorpus.addDocument( doc );
+		m_hmSynset2Doc.put( wnsynset.getSynset(), doc );
+	}
+
+	private void addToTempCorpus( WordnetSynsetList synsetlist ) {
+		List lSynsets = synsetlist.getSynsets();
+		for ( int i = 0; i < lSynsets.size(); i++ )
+		{
+			WordnetSynset wnsynset = (WordnetSynset) lSynsets.get( i );
+			addToTempCorpus( wnsynset );
+		}
+	}
+
+	private boolean addWordnetSynsetList( POMEntity entity ) {
+		return addWordnetSynsetList( entity.getLabel() );
+	}
+
+	private boolean addWordnetSynsetList( String sNoun ) {
+		boolean bHasSynset = false;
+		if ( !m_hmNoun2WordnetSynsetList.containsKey( sNoun ) )
+		{
+			WordnetSynsetList synsetlist = getWordnetSynsetList( sNoun );
+			if ( synsetlist != null )
+			{
+				m_hmNoun2WordnetSynsetList.put( sNoun, synsetlist );
+				addToTempCorpus( synsetlist );
+				bHasSynset = true;
+			}
+		}
+		return bHasSynset;
+	}
+
+	private void createPOMChanges() {
+		Iterator iterHm = this.m_hmPOMRelationDom2Range.entrySet().iterator();
+
+		//for every domain entity
+		while ( iterHm.hasNext() )
+		{
+			Map.Entry mapentry = (Map.Entry) iterHm.next();
+			POMConcept domain = (POMConcept) mapentry.getKey();
+			WordnetSynsetList domainSynsetList = (WordnetSynsetList) m_hmNoun2WordnetSynsetList.get( domain.getLabel() );
+			System.out.println( "domainSynsetList " + domainSynsetList.getNoun() );
+			WordnetSynsetList rangeSynsetList = null;
+			List lDomainSynsets = (List) domainSynsetList.getSynsets();
+			ArrayList alRanges = null;
+			double dProbMax = 0;
+
+			//for every synset of this domain
+			for ( int j = 0; j < lDomainSynsets.size(); j++ )
+			{
+				WordnetSynset domainSynset = (WordnetSynset) lDomainSynsets.get( j );
+				alRanges = (ArrayList) mapentry.getValue();
+
+				//for every range entity of this domain entity
+				for ( int l = 0; l < alRanges.size(); l++ )
+				{
+					POMConcept range = (POMConcept) alRanges.get( l );
+					rangeSynsetList = (WordnetSynsetList) m_hmNoun2WordnetSynsetList.get( range.getLabel() );
+					List lRangeSynsets = (List) rangeSynsetList.getSynsets();
+					WordnetSynset rangeSynset = null;
+
+					for ( int k = 0; k < lRangeSynsets.size(); k++ )
+					{
+						rangeSynset = (WordnetSynset) lRangeSynsets.get( k );
+						PointerTargetTree domainTargetTree = getPointerTargetTree( domainSynset.getSynset() );
+						if ( rangeSynset.isContainedIn( domainTargetTree ) )
+						{
+							double dProbTemp = domainSynset.getProb() * rangeSynset.getProb();
+							if ( dProbTemp > dProbMax )
+							{
+								dProbMax = dProbTemp;
+							}
+						}
+					}
+				}
+			}
+			POMRelation relation = getPOMRelation( domainSynsetList.getNoun(), rangeSynsetList.getNoun(), dProbMax );
+			if ( relation.getProbability() != 0 )
+			{
+				Change change = new Change( Change.Type.ADD, this, relation );
+				m_lPomChanges.add( change );
+			}
+		}
+		System.out.println( "22" );
+	}
+
+	public abstract POMRelation getPOMRelation( String sDomain, String sRange, double dProb );
+
+	private void createWordnetContextStoreChanges( String sLabel, ContextVector lEntityTokens ) {
+		Change change = null;
+		Change add = new Change( Change.Type.ADD, this, new POMConcept( sLabel ), lEntityTokens, change );
+		if ( !m_lWordnetContextStoreChanges.contains( add ) ){
+			m_lWordnetContextStoreChanges.add( add );
+		}
+	}
+
+	private List getPreprocessedGloss( WordnetSynset wnsynset ) {
+		AbstractDocument doc = (AbstractDocument) m_hmSynset2Doc.get( wnsynset.getSynset() );
+
+		if ( doc != null )
+		{
+			List alTokens = new ArrayList();
+			List lPointers = m_analyser.getTokenPointers( doc );
+			for ( int i = 0; i < lPointers.size(); i++ )
+			{
+				DocumentReference pointer = (DocumentReference) lPointers.get( i );
+				if ( !m_analyser.isStopword( pointer ) )
+				{
+					//alTokenStems contains always one token
+					ArrayList alTokenStems = (ArrayList) m_analyser.getTokenStems( pointer );
+					String[] words = (String[]) alTokenStems.toArray( new String[0] );
+
+					alTokenStems = (ArrayList) this.m_analyser.removeSpecialCharacters( words );
+					alTokens.addAll( alTokenStems );
+				}
+			}
+			return alTokens;
+		}
+		return null;
+	}
+
+	private double getProbability( ContextVector cv1, ContextVector cv2 ) {
+		if ( cv1 != null && cv2 != null ){
+			return cv1.getCosinusSimilarity( cv2 );
+		} 
+		else {
+			return 0;
+		}
+	}
+
+	/*
+	 * get Wordnetsynsetlist and makes the changes in the wordnet context store
+	 */
+	private WordnetSynsetList getWordnetSynsetList( String sNoun ) {
+		WordnetSynsetList entitySynsets = new WordnetSynsetList( sNoun );
+		Synset[] entitysyns;
+		try {
+			entitysyns = m_wordnet.getSynsets( sNoun );
+			if ( entitysyns != null ){
+				for ( int i = 0; i < entitysyns.length; i++ )
+				{
+					Synset synset = (Synset)entitysyns[i];
+					ContextVector cvEntitySyn = makeContextVector( m_wordnet.getGlossTokens( synset ) );
+					WordnetSynset wnsynset = new WordnetSynset( synset, sNoun );
+					wnsynset.setContextvector( cvEntitySyn );
+					entitySynsets.addSynset( wnsynset );
+				}
+			}
+		} catch ( JWNLException e )
+		{
+			e.printStackTrace();
+		}
+		return entitySynsets;
+	}
+
+	private ContextVector makeContextVector( List lTokens ) {
+		ContextVector cv = new ContextVector();
+		for ( int i = 0; i < lTokens.size(); i++ )
+		{
+			String string = (String) lTokens.get( i );
+			cv.addFeature( string );
+		}
+		return cv;
+	}
+
+	private void preprocessTempCorpus() {
+		try {
+			m_analyser.setCorpus( m_tempCorpus );
+			m_analyser.doPreprocessing();
+		} 
+		catch ( AnalyserException e ){
+			e.printStackTrace();
+		}
+	}
+
+	private void resetCorpus() {
+		try {
+			m_analyser.setCorpus( m_corpus );
+		} 
+		catch ( AnalyserException e ){
+			e.printStackTrace();
+		}
+	}
+
+	private void updateWordnetSynsetList( WordnetSynsetList entitySynsets ) {
+		String sNoun = entitySynsets.getNoun();
+		POMConcept concept = new POMConcept( sNoun );
+		List lEntitySyns = entitySynsets.getSynsets();
+		for ( int i = 0; i < lEntitySyns.size(); i++ )
+		{
+			WordnetSynset wnsynset = (WordnetSynset) lEntitySyns.get( i );
+			ContextVector cvEntityStore = m_contextVectorStore.getContextVector( concept );
+			ContextVector cvEntitySyn = wnsynset.getContextvector();
+			cvEntitySyn = makeContextVector( getPreprocessedGloss( wnsynset ) );
+			double dProb = getProbability( cvEntityStore, cvEntitySyn );
+			wnsynset.setProb( dProb );
+			createWordnetContextStoreChanges( new String( sNoun + "_synset_" + i ), cvEntityStore );
+		}
+		entitySynsets.normalize();
+		entitySynsets.sort();
+	}
+
+	private void updateWordnetSynsetLists() {
+		Iterator iterNouns = m_hmNoun2WordnetSynsetList.values().iterator();
+		while ( iterNouns.hasNext() )
+		{
+			WordnetSynsetList wnsynsetlist = (WordnetSynsetList) iterNouns.next();
+			if ( wnsynsetlist != null ){
+				updateWordnetSynsetList( wnsynsetlist );
+			}
+		}
+	}
+
+	public List execute() throws Exception {
+		m_sWordnetTempCorpus = new String( "file:///" + Settings.get( Settings.TEMP_CORPUS ) );
+		m_tempCorpus = CorpusFactory.newCorpus( m_sWordnetTempCorpus );
+		m_lWordnetContextStoreChanges = new ArrayList();
+		m_hmPOMRelationDom2Range = new HashMap();
+		m_lPomChanges = new ArrayList();
+		m_wordnet.init();
+		m_patternStore.addChangeObserver( this );
+		POMRelation relation = null;
+
+		List lEntityChanges = m_patternStore.getChangesFor( this );
+		for ( int i = 0; i < lEntityChanges.size(); i++ ) {
+			Change change = (Change) lEntityChanges.get( i );
+			relation = (POMRelation) change.getObject();
+
+			//collect all synsets for the domain entity
+			boolean bHasSynset = addWordnetSynsetList( relation.getDomain() );
+
+			//if wordnet has no info about the domain entity
+			if ( !bHasSynset )
+			{
+				continue;
+			}
+
+			WordnetSynsetList domainSynsetList = (WordnetSynsetList) m_hmNoun2WordnetSynsetList.get( relation.getDomain().getLabel() );
+			List lDomainSynsets = (List) domainSynsetList.getSynsets();
+
+			bHasSynset = addWordnetSynsetList( relation.getRange() );
+			if ( bHasSynset )
+			{
+				//collect all the synsets for the range entity
+				ArrayList alRangeEntities = null;
+				if ( m_hmPOMRelationDom2Range.size() > 0 )
+				{
+					alRangeEntities = (ArrayList) m_hmPOMRelationDom2Range.get( relation.getDomain() );
+					if ( alRangeEntities == null )
+					{
+						alRangeEntities = new ArrayList();
+						alRangeEntities.add( relation.getRange() );
+						m_hmPOMRelationDom2Range.put( relation.getDomain(), alRangeEntities );
+					} 
+					else if ( !alRangeEntities.contains( relation.getRange() ) )
+					{
+						alRangeEntities.add( relation.getRange() );
+					}
+				} 
+				else {
+					alRangeEntities = new ArrayList();
+					alRangeEntities.add( relation.getRange() );
+					m_hmPOMRelationDom2Range.put( relation.getDomain(), alRangeEntities );
+				}
+			}
+		}
+
+		//preprocess all the synsets with the gate application: the context
+		// vector are stemmed and stopwords are deleted
+		preprocessTempCorpus();
+
+		//update all context vectors
+		updateWordnetSynsetLists();
+
+		//add changes to the wordnet context store
+		m_contextVectorStore.addChangeObserver( this );
+		m_contextVectorStore.applyChanges( m_lWordnetContextStoreChanges );
+
+		//create POM changes
+		createPOMChanges();
+		resetCorpus();
+		return m_lPomChanges;
+	}
+
+	public abstract PointerTargetTree getPointerTargetTree( Synset synset );
+}
