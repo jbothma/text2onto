@@ -2,11 +2,11 @@
 	<description>
 		Buildfile for Text2Onto
 	</description>
-	
+
 	<property name="plugin" location="plugin"/>
 	<property name="src" location="src"/>
 	<property name="build-plugin" location="build/bin/plugin"/>
-	<property name="build-src" location="build/bin/src"/>
+	<property name="build" location="build/bin/"/>
 	<property name="jar" location="build/jar"/>
 	<property name="doc" location="build/doc"/>
 	<property name="misc" location="3rdparty"/>
@@ -14,8 +14,9 @@
 	<property name="gate" location="3rdparty/gate"/>
 	<property name="google" location="3rdparty/google"/>
 	<property name="kaon2" location="3rdparty/kaon2"/>
-    
+
 	<path id="classpath">
+    <pathelement location="${build}"/>
 		<pathelement location="${misc}"/>
 		<fileset dir="${misc}">
 			<include name="**/*.jar"/>
@@ -34,52 +35,57 @@
 		</fileset>
 		<fileset dir="${kaon2}">
 			<include name="**/*.jar"/>
-		</fileset> 
+		</fileset>
 	</path>
-    
+
 	<target name="init">
 		<tstamp/>
 	</target>
-	
-	<target name="compile-src" depends="init" description="compile new">
-		<mkdir dir="${build-src}"/>
-		<javac source="1.5" srcdir="${src}" destdir="${build-src}">
+
+	<target name="compile" depends="init" description="compile">
+		<mkdir dir="${build}"/>
+		<javac source="1.5" srcdir="${src}" destdir="${build}">
 			<classpath refid="classpath"/>
-		</javac> 
+		</javac>
 	</target>
-    
+
 	<target name="compile-plugin" depends="init" description="compile plugin">
 		<mkdir dir="${build-plugin}"/>
 		<javac source="1.5" srcdir="${plugin}" destdir="${build-plugin}">
 			<classpath refid="classpath"/>
 			<classpath>
-				<pathelement location="${build-new}"/>
+				<pathelement location="${build}"/>
 			</classpath>
-		</javac> 
+		</javac>
 	</target>
-			 
-	<target name="jar" depends="compile-src" description="generate jar files" >
+
+	<target name="run" depends="compile">
+		<java classname="org.ontoware.text2onto.gui.Text2Onto" fork="true">
+			<classpath refid="classpath"/>
+		</java>
+	</target>
+
+	<target name="jar" depends="compile" description="generate jar files" >
 		<mkdir dir="${jar}"/>
 		<jar jarfile="${jar}/text2onto.jar">
-			<fileset dir="${build-src}"/>
-		</jar> 
+			<fileset dir="${build}"/>
+		</jar>
 		<jar jarfile="${jar}/text2onto-plugin.jar">
 			<fileset dir="${build-plugin}"/>
 		</jar>
 	</target>
-    
+
 	<target name="doc">
 		<mkdir dir="${doc}"/>
 		<javadoc source="1.5" packagenames="org.ontoware.text2onto.*" sourcepath="${src}" destdir="${doc}">
 			<classpath refid="classpath"/>
-		</javadoc> 
+		</javadoc>
 	</target>
-    
+
 	<target name="clean" description="clean up" >
-		<delete dir="${build-src}"/>
+		<delete dir="${build}"/>
 		<delete dir="${build-plugin}"/>
 		<delete dir="${jar}"/>
 		<delete dir="${doc}"/>
 	</target>
 </project>
-    

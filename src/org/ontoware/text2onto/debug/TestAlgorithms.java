@@ -56,8 +56,8 @@ public class TestAlgorithms implements ProgressListener {
 			// ac.setNormalizer( new Zero2OneNormalizer() );
 			ac.addProgressListener( this );
 			 
-			// ac.addAlgorithm( new TFIDFConceptExtraction() );
-			// ac.addAlgorithm( new TFIDFInstanceExtraction() );
+			ac.addAlgorithm( new TFIDFConceptExtraction() );
+			ac.addAlgorithm( new TFIDFInstanceExtraction() );
 			
 			// similarity extraction
 			
@@ -74,7 +74,7 @@ public class TestAlgorithms implements ProgressListener {
 			// ac.addAlgorithmTo( instanceClassification, new ContextInstanceClassification() );
 			// ac.addAlgorithmTo( instanceClassification, new PatternInstanceClassification() ); 
 			
-			// ac.addAlgorithm( new PatternInstanceClassification() );
+			ac.addAlgorithm( new PatternInstanceClassification() );
 			 
 			// concept classification
 			
@@ -83,12 +83,12 @@ public class TestAlgorithms implements ProgressListener {
 			ac.addAlgorithm( conceptClassification );
 			
 			ac.addAlgorithmTo( conceptClassification, new PatternConceptClassification() );
-			ac.addAlgorithmTo( conceptClassification, new VerticalRelationsConceptClassification() ); 
+			// ac.addAlgorithmTo( conceptClassification, new VerticalRelationsConceptClassification() ); 
 			ac.addAlgorithmTo( conceptClassification, new WordNetConceptClassification() );
 			
 			// relation extraction
 			
-			// ac.addAlgorithm( new SubcatRelationExtraction() );			
+			ac.addAlgorithm( new SubcatRelationExtraction() );			
 			  
 			// subtopic-of
 			

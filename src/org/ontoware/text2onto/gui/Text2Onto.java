@@ -407,12 +407,6 @@ public class Text2Onto implements CorpusListener, ControllerListener, POMListene
 				doRun();
 			}
 		} );
-		JButton buttonActive = new JButton( createImageIcon( "users.ico" ) );
-		buttonActive.addActionListener( new ActionListener() {
-			public void actionPerformed( ActionEvent e ) {
-				doActiveLearning();
-			}
-		} );
 		m_buttonImport = new JButton( createImageIcon( "import.ico" ) );
 		m_buttonImport.addActionListener( new ActionListener() {
 			public void actionPerformed( ActionEvent e ) {
@@ -440,7 +434,6 @@ public class Text2Onto implements CorpusListener, ControllerListener, POMListene
 		} );
 		toolbar.add( buttonNew );
 		toolbar.add( buttonRun );
-		toolbar.add( buttonActive );
 		toolbar.add( m_buttonImport );
 		toolbar.add( m_buttonExport );
 		toolbar.add( buttonHelp );
@@ -456,12 +449,6 @@ public class Text2Onto implements CorpusListener, ControllerListener, POMListene
 
 	private void doExit() {
 		System.exit( 0 );
-	}
-	
-	private void doActiveLearning(){
-		ActiveLearning al = new ActiveLearning( m_frame, m_corpus, m_pomWrapper.getChangeable() );
-		al.addListener( this );
-		al.show();
 	}
 
 	private void doExport() {
