@@ -99,13 +99,12 @@ public class PelletWriter implements OntologyWriter {
 	}
 	
 	public void create( File file ) throws Exception {
-		m_logicalIRI = IRI.create( "http://dbpedia.org/ontology" );
+		m_logicalIRI = IRI.create( "http://text2onto.org/ontology" );
 		m_physicalIRI = IRI.create( file.toURI().toString() );
 		// OWLOntologyIRIMapper mapper = new OWLOntologyIRIMapper( m_logicalIRI, m_physicalIRI );
 		// m_manager.addIRIMapper( mapper );
 		m_ontology = m_manager.createOntology( m_physicalIRI );
 		m_reasoner = PelletReasonerFactory.getInstance().createNonBufferingReasoner( m_ontology );
-		// m_manager.addOntologyChangeListener( m_reasoner );
 	}
 	
 	public void save( String sFile ) throws Exception {
@@ -113,14 +112,13 @@ public class PelletWriter implements OntologyWriter {
 		m_manager.saveOntology( m_ontology, IRI.create( sFile ) );
 	}
 	
-	public void load( File file ) throws Exception {
+	/* public void load( File file ) throws Exception {
 		System.out.println( "Ontology.load: "+ file );
 		m_logicalIRI = IRI.create( "http://dbpedia.org/ontology" );
 		m_physicalIRI = IRI.create( file.toURI().toString() );
 		m_ontology = m_manager.loadOntologyFromOntologyDocument( m_physicalIRI );
 		m_reasoner = PelletReasonerFactory.getInstance().createNonBufferingReasoner( m_ontology );
-		// m_manager.addOntologyChangeListener( m_reasoner );
-	}
+	} */
 	
 	public boolean isCoherent() {
 		Set<OWLClass> classes = m_ontology.getClassesInSignature();
@@ -164,33 +162,33 @@ public class PelletWriter implements OntologyWriter {
 		m_manager.applyChange( removeAxiom );
 	}
 	
-	public OWLAnnotation annotation( String sAnnotation, double dValue ){
+	/* public OWLAnnotation annotation( String sAnnotation, double dValue ){
 		OWLAnnotationProperty prop = m_factory.getOWLAnnotationProperty( IRI.create( m_logicalIRI +"#"+ sAnnotation ) );
 		OWLAnnotation annotation = m_factory.getOWLAnnotation( prop, m_factory.getOWLLiteral( dValue ) );
 		return annotation;
-	}
+	} */
 
 	public OWLAxiom subclassAxiom( String sName1, String sName2 ){
-		OWLClass c1 = m_factory.getOWLClass( IRI.create( m_logicalIRI +"/"+ sName1 ) );
-		OWLClass c2 = m_factory.getOWLClass( IRI.create( m_logicalIRI +"/"+ sName2 ) );
+		OWLClass c1 = m_factory.getOWLClass( IRI.create( m_logicalIRI +"#"+ sName1 ) );
+		OWLClass c2 = m_factory.getOWLClass( IRI.create( m_logicalIRI +"#"+ sName2 ) );
 		return m_factory.getOWLSubClassOfAxiom(c1, c2);
 	}
 	
 	public OWLAxiom instanceofAxiom( String sName1, String sName2 ){
-		OWLIndividual ind = m_factory.getOWLNamedIndividual( IRI.create( m_logicalIRI +"/"+ sName1 ) );
-		OWLClass c = m_factory.getOWLClass( IRI.create( m_logicalIRI +"/"+ sName2 ) );
+		OWLIndividual ind = m_factory.getOWLNamedIndividual( IRI.create( m_logicalIRI +"#"+ sName1 ) );
+		OWLClass c = m_factory.getOWLClass( IRI.create( m_logicalIRI +"#"+ sName2 ) );
 		return m_factory.getOWLClassAssertionAxiom(c, ind);
 	}
 	
 	public OWLAxiom domainAxiom( String sName1, String sName2 ){
-		OWLObjectProperty prop = m_factory.getOWLObjectProperty( IRI.create( m_logicalIRI +"/"+ sName1 ) );
-		OWLClass c = m_factory.getOWLClass( IRI.create( m_logicalIRI +"/"+ sName2 ) );
+		OWLObjectProperty prop = m_factory.getOWLObjectProperty( IRI.create( m_logicalIRI +"#"+ sName1 ) );
+		OWLClass c = m_factory.getOWLClass( IRI.create( m_logicalIRI +"#"+ sName2 ) );
 		return m_factory.getOWLObjectPropertyDomainAxiom(prop, c);
 	}
 	
 	public OWLAxiom rangeAxiom( String sName1, String sName2 ){
-		OWLObjectProperty prop = m_factory.getOWLObjectProperty( IRI.create( m_logicalIRI +"/"+ sName1 ) );
-		OWLClass c = m_factory.getOWLClass( IRI.create( m_logicalIRI +"/"+ sName2 ) );
+		OWLObjectProperty prop = m_factory.getOWLObjectProperty( IRI.create( m_logicalIRI +"#"+ sName1 ) );
+		OWLClass c = m_factory.getOWLClass( IRI.create( m_logicalIRI +"#"+ sName2 ) );
 		return m_factory.getOWLObjectPropertyRangeAxiom(prop, c);
 	}
 }
