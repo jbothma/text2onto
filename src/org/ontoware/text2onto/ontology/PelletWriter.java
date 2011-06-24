@@ -63,6 +63,10 @@ public class PelletWriter implements OntologyWriter {
 		save( physicalURI.toString() );
 	} 
 	
+	private String getLabel( POMObject object ){
+		return object.getLabel().replaceAll( " ", "_" );
+	}
+	
 	private void addSubclassOf( List relations ) throws Exception {
 		Iterator iter = relations.iterator();
 		while( iter.hasNext() )
@@ -70,7 +74,7 @@ public class PelletWriter implements OntologyWriter {
 			POMSubclassOfRelation rel = (POMSubclassOfRelation)iter.next();
 			POMConcept domain = (POMConcept)rel.getDomain(); // returns subclass
 			POMConcept range = (POMConcept)rel.getRange();  // return superclass
-			addAxiom( subclassAxiom( domain.getLabel(), range.getLabel() ) );
+			addAxiom( subclassAxiom( getLabel( domain ), getLabel( range ) ) );
 		} 
 	}
 	
@@ -81,7 +85,7 @@ public class PelletWriter implements OntologyWriter {
 			POMInstanceOfRelation rel = (POMInstanceOfRelation)iter.next();
 			POMInstance domain = (POMInstance)rel.getDomain();
 			POMConcept range = (POMConcept)rel.getRange();
-			addAxiom( instanceofAxiom( domain.getLabel(), range.getLabel() ) );
+			addAxiom( instanceofAxiom( getLabel( domain ), getLabel( range ) ) );
 		} 
 	}
 	
@@ -92,9 +96,8 @@ public class PelletWriter implements OntologyWriter {
 			POMRelation rel = (POMRelation)iter.next();
 			POMConcept domain = (POMConcept)rel.getDomain();
 			POMConcept range = (POMConcept)rel.getRange();
-			String sRel = rel.getLabel().replaceAll( " ", "_" );
-			addAxiom( domainAxiom( rel.getLabel(), domain.getLabel() ) );
-			addAxiom( rangeAxiom( rel.getLabel(), range.getLabel() ) );
+			addAxiom( domainAxiom( getLabel( rel ), getLabel( domain ) ) );
+			addAxiom( rangeAxiom( getLabel( rel ), getLabel( range ) ) );
 		} 
 	}
 	
