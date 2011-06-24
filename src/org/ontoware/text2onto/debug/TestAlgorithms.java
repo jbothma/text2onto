@@ -116,7 +116,7 @@ public class TestAlgorithms implements ProgressListener {
 			
 			System.out.println( "\nPOM (details):\n"+ pom.toStringDetails() +"\n" );		
 			
-			StringBuffer sb = new StringBuffer();
+			/* StringBuffer sb = new StringBuffer();
 			List objects = pom.getObjects( POMSubclassOfRelation.class );
 			for( int i=0; i<objects.size(); i++ ){
 				POMSubclassOfRelation rel = (POMSubclassOfRelation)objects.get(i);
@@ -124,11 +124,11 @@ public class TestAlgorithms implements ProgressListener {
 				sb.append( ", "+ rel.getRange() );
 				sb.append( ", "+ rel.getProbability() +"\n" );
 			}
-			write( sb.toString(), "/Volumes/Dev/temp/text2onto.txt" );
+			write( sb.toString(), "/Volumes/Dev/temp/text2onto.txt" ); */
 			
 			// write( ac, sOntology +".rdfs" );
 			// write( ac, sOntology +".kaon" );
-			// write( ac, sOntology +".owl" );
+			write( ac, sOntology +".owl" );
 			// write( ac, sOntology +".ser" );
 			
 			// writeSplit( ac, sOntology, 10 );
@@ -170,7 +170,7 @@ public class TestAlgorithms implements ProgressListener {
 		} 
 		else if( sOntology.endsWith( ".owl" ) ){
 			// writer = new SimpleOWLWriter( pom );
-			writer = new OWLWriter( pom );
+			writer = new PelletWriter( pom );
 		}
 		else if( sOntology.endsWith( ".ser" ) ){
 			File file = new File( new URI( sOntology ) );

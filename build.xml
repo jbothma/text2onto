@@ -11,6 +11,7 @@
 	<property name="doc" location="build/doc"/>
 	<property name="misc" location="3rdparty"/>
 	<property name="kaon" location="3rdparty/kaon"/>
+    <property name="pellet" location="3rdparty/pellet"/>
 	<property name="gate" location="3rdparty/gate"/>
 	<property name="google" location="3rdparty/google"/>
 	<property name="kaon2" location="3rdparty/kaon2"/>
@@ -23,6 +24,10 @@
 		</fileset>
 		<pathelement location="${kaon}"/>
 		<fileset dir="${kaon}">
+			<include name="**/*.jar"/>
+		</fileset>
+        <pathelement location="${pellet}"/>
+		<fileset dir="${pellet}">
 			<include name="**/*.jar"/>
 		</fileset>
 		<pathelement location="${gate}"/>
