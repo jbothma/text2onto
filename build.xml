@@ -49,7 +49,7 @@
 
 	<target name="compile" depends="init" description="compile">
 		<mkdir dir="${build}"/>
-		<javac source="1.5" srcdir="${src}" destdir="${build}">
+		<javac source="1.5" srcdir="${src}" destdir="${build}" encoding="iso-8859-1">
 			<classpath refid="classpath"/>
 		</javac>
 	</target>
