@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="3rdparty/kaon/kaonapi.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="lib" path="3rdparty/berkeleydb/je.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/gate.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/heptag.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/jasper-compiler-jdt.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/nekohtml-0.9.5.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/ontotext.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/StopwordDetection.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/xercesImpl.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/xpp3-1.1.3.3_min.jar"/>
-	<classpathentry kind="lib" path="/home/jdb/sw/text2onto/3rdparty/gate/xstream-1.2.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/gate.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/heptag.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/jasper-compiler-jdt.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/nekohtml-0.9.5.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/ontotext.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/StopwordDetection.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/xpp3-1.1.3.3_min.jar"/>
+	<classpathentry kind="lib" path="3rdparty/gate/xstream-1.2.jar"/>
 	<classpathentry kind="lib" path="3rdparty/google/googleapi.jar"/>
 	<classpathentry kind="lib" path="3rdparty/jgraph/jgraph.jar"/>
 	<classpathentry kind="lib" path="3rdparty/jgraph/jgraphaddons.jar"/>
@@ -23,11 +24,9 @@
 	<classpathentry kind="lib" path="3rdparty/jpedal/jpedal.jar"/>
 	<classpathentry kind="lib" path="3rdparty/kaon/apionrdf.jar"/>
 	<classpathentry kind="lib" path="3rdparty/kaon/datalog.jar"/>
-	<classpathentry kind="lib" path="3rdparty/kaon/kaonapi.jar"/>
 	<classpathentry kind="lib" path="3rdparty/kaon/query.jar"/>
 	<classpathentry kind="lib" path="3rdparty/kaon/rdfapi.jar"/>
 	<classpathentry kind="lib" path="3rdparty/kaon2/commons-collections-3.2.jar"/>
-	<classpathentry kind="lib" path="3rdparty/kaon2/datamodelBase.jar"/>
 	<classpathentry kind="lib" path="3rdparty/kaon2/ehcache-1.1.jar"/>
 	<classpathentry kind="lib" path="3rdparty/kaon2/kaon2.jar"/>
 	<classpathentry kind="lib" path="3rdparty/kaon2/log4j-1.2.8.jar"/>

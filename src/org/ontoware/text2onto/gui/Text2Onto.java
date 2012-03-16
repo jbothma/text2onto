@@ -115,9 +115,11 @@ public class Text2Onto implements CorpusListener, ControllerListener, POMListene
 		Text2Onto t2o = new Text2Onto( frame );
 		frame.setJMenuBar( t2o.createMenuBar() );
 		frame.setContentPane( t2o.createContentPane() );
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		frame.setBounds(0,0,screenSize.width, screenSize.height);
 		// frame.setSize( Toolkit.getDefaultToolkit().getScreenSize() );
 		// frame.setSize( new Dimension( 800, 600 ) );
-		frame.setExtendedState( JFrame.MAXIMIZED_BOTH );
+		//frame.setExtendedState( JFrame.MAXIMIZED_BOTH );
 		frame.setVisible( true );
 	}
 
@@ -547,20 +549,24 @@ public class Text2Onto implements CorpusListener, ControllerListener, POMListene
 			String sURI = uri.toString();
 			if( sURI.endsWith( ".ser" ) ) {
 				Session session = (Session)PersistenceManager.deserialize( file );
-				m_controller = session.getAlgorithmController();
-				try {
-					m_controller.initPreprocessor();
+				if (session != null) {
+					m_controller = session.getAlgorithmController();
+					try {
+						m_controller.initPreprocessor();
+					}
+					catch( Exception e ) {
+						e.printStackTrace();
+					}
+					// catch( AnalyserException e ) {
+					// e.printStackTrace();
+					// }
+					m_corpus = session.getCorpus();
+					m_pomWrapper = new POMWrapper( session.getPOM() );
+					m_pomPanel.reset( m_pomWrapper.getChangeable() );
+					m_persistenceManager = new PersistenceManager( session );
+				} else {
+					m_statusPanel.printError( "Error opening session." );
 				}
-				catch( Exception e ) {
-					e.printStackTrace();
-				}
-				// catch( AnalyserException e ) {
-				// e.printStackTrace();
-				// }
-				m_corpus = session.getCorpus();
-				m_pomWrapper = new POMWrapper( session.getPOM() );
-				m_pomPanel.reset( m_pomWrapper.getChangeable() );
-				m_persistenceManager = new PersistenceManager( session );
 
 				updateControllerPanel();
 				updatePOMPanel();
@@ -657,7 +663,9 @@ public class Text2Onto implements CorpusListener, ControllerListener, POMListene
 			m_controller = new AlgorithmController( m_corpus, m_pomWrapper.getChangeable() );
 		}
 		catch( Exception e ) {
-			m_statusPanel.printError( e.toString() );
+			System.err.println( e.toString() );
+			if (m_statusPanel != null)
+				m_statusPanel.printError( e.toString() );
 		}
 		// m_controller.setNormalizer( new Zero2OneNormalizer() );
 		Session session = new Session( this.m_controller, this.m_pomWrapper.getChangeable(), m_corpus );
