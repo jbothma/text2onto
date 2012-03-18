@@ -56,5 +56,6 @@ public class GateSerialDataStore extends GateDataStore{
 
 	public void syncSerialDataStore( Corpus corpus ) throws Exception {
 		m_persistCorpus = (Corpus)m_dataStore.adopt( corpus, null );
+		m_dataStore.sync(m_persistCorpus);
 	}
 }
